@@ -12,11 +12,12 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Document ingestion pipeline extracts text from PDF and PPTX files (no image/OCR processing) — *Validated in Phase 1: Document Ingestion Foundation*
+- [x] Incremental indexing: system skips already-indexed documents on re-run (SHA-256 dedup) — *Validated in Phase 1*
 
 ### Active
 
-- [ ] Document ingestion pipeline extracts text from PDF and PPTX files (no image/OCR processing)
+- [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [ ] Local embedding model served via LM Studio OpenAI-compatible API
 - [ ] Knowledge graph captures named entities, relationships, and document communities across the corpus
@@ -79,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after initialization*
+*Last updated: 2026-03-28 after Phase 1 completion — document ingestion pipeline built and verified*
