@@ -49,7 +49,7 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 - **Stack**: 100% open source, locally installable — no SaaS, no cloud calls, no paid APIs
 - **Model serving**: LM Studio as the inference backend — embedding and LLM models must be compatible
 - **Document formats**: Only PDF and PPTX — no Word, Excel, or email formats in scope
-- **Installation**: Must be installable on a restricted corporate laptop — minimize complex system dependencies
+- **Installation**: pip install only — corporate firewall blocks conda, Docker, and system-level packages; all dependencies must be pip-installable
 
 ## Key Decisions
 
@@ -58,6 +58,8 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 | Text extraction over visual embeddings | v1 proved visual embeddings (colqwen2.5) are unusable at 5+ min/page on this hardware | — Pending |
 | LM Studio as model server | Already installed; provides OpenAI-compatible API for both embedding and LLM | — Pending |
 | Web chat UI | Consultants are non-technical; browser chat lowers friction vs CLI/notebooks | — Pending |
+| KuzuDB for graph storage | pip-installable embedded graph DB; corporate firewall blocks Neo4j and other server-based graph DBs | — Pending |
+| pip-only dependency constraint | Corporate laptop firewall blocks conda, Docker, system packages — all dependencies must install via pip | — Pending |
 
 ## Evolution
 
