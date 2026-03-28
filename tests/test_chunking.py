@@ -1,11 +1,7 @@
-"""Tests for text chunking with tiktoken.
-
-Stubs: marked xfail until src/ingest/chunker.py is implemented (Plan 05).
-"""
+"""Tests for text chunking with tiktoken."""
 import pytest
 
 
-@pytest.mark.xfail(strict=False, reason="stub — chunker not yet implemented")
 def test_chunk_fixed_size():
     """Chunker produces chunks of at most 512 tokens."""
     from src.ingest.chunker import chunk_text
@@ -16,7 +12,6 @@ def test_chunk_fixed_size():
         assert chunk["token_count"] <= 512
 
 
-@pytest.mark.xfail(strict=False, reason="stub — chunker not yet implemented")
 def test_chunk_overlap():
     """Adjacent chunks share approximately 100 tokens of overlap."""
     from src.ingest.chunker import chunk_text
@@ -29,7 +24,6 @@ def test_chunk_overlap():
     assert any(w in start_words for w in end_words)
 
 
-@pytest.mark.xfail(strict=False, reason="stub — chunker not yet implemented")
 def test_chunk_metadata_fields():
     """Each chunk dict contains required metadata keys."""
     from src.ingest.chunker import chunk_text
@@ -40,7 +34,6 @@ def test_chunk_metadata_fields():
         assert required_keys.issubset(chunk.keys()), f"Missing keys: {required_keys - chunk.keys()}"
 
 
-@pytest.mark.xfail(strict=False, reason="stub — chunker not yet implemented")
 def test_chunk_boundary_quality():
     """Chunker does not split mid-word at chunk boundaries."""
     from src.ingest.chunker import chunk_text
@@ -54,7 +47,6 @@ def test_chunk_boundary_quality():
         assert not text.endswith("-"), f"Chunk ends with hyphen: ...{text[-20:]}"
 
 
-@pytest.mark.xfail(strict=False, reason="stub — chunker not yet implemented")
 def test_chunk_token_count_accuracy():
     """Stored token_count matches actual tiktoken encode length."""
     import tiktoken
