@@ -7,7 +7,6 @@ import sqlite3
 from pathlib import Path
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pipeline not yet implemented")
 def test_ingest_pdf_complete(sample_pdf_path, tmp_db_path):
     """Full PDF ingest: extraction -> chunking -> storage produces chunks in DB."""
     from src.ingest.pipeline import ingest_document
@@ -20,7 +19,6 @@ def test_ingest_pdf_complete(sample_pdf_path, tmp_db_path):
     assert count > 0
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pipeline not yet implemented")
 def test_ingest_pptx_complete(sample_pptx_path, tmp_db_path):
     """Full PPTX ingest: extraction -> chunking -> storage produces chunks in DB."""
     from src.ingest.pipeline import ingest_document
@@ -31,7 +29,6 @@ def test_ingest_pptx_complete(sample_pptx_path, tmp_db_path):
     assert count > 0
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pipeline not yet implemented")
 def test_ingest_deduplication(sample_pdf_path, tmp_db_path):
     """Ingesting the same document twice does not create duplicate entries."""
     from src.ingest.pipeline import ingest_document
@@ -43,7 +40,6 @@ def test_ingest_deduplication(sample_pdf_path, tmp_db_path):
     assert doc_count == 1  # Not 2
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pipeline not yet implemented")
 def test_ingest_chunk_metadata_stored(sample_pdf_path, tmp_db_path):
     """Chunks stored in DB include page_num, chunk_index, and token_count."""
     from src.ingest.pipeline import ingest_document
