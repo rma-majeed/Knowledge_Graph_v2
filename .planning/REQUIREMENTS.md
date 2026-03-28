@@ -1,0 +1,94 @@
+# Requirements: Automotive Consulting GraphRAG Agent
+
+**Defined:** 2026-03-28
+**Core Value:** A consultant types a question and gets a cited, synthesized answer drawn from 15 years of institutional knowledge — fast, locally, without leaving their laptop.
+
+## v1 Requirements
+
+### Ingestion
+
+- [ ] **INGEST-01**: System extracts full text content from PDF files using PyMuPDF
+- [ ] **INGEST-02**: System extracts text from PPTX files including slide text, speaker notes, and table cells via python-pptx
+- [ ] **INGEST-03**: System chunks extracted text into segments suitable for embedding and graph extraction
+
+### Embedding & Vector Store
+
+- [ ] **EMBED-01**: System generates embeddings for each chunk using a local model served via LM Studio OpenAI-compatible API
+- [ ] **EMBED-02**: System stores chunk embeddings in ChromaDB for semantic retrieval
+- [ ] **EMBED-03**: System stores raw chunk text and document metadata (filename, page/slide number) alongside vectors
+
+### Knowledge Graph
+
+- [ ] **GRAPH-01**: System extracts named entities and typed relationships from chunks using LLM via LM Studio
+- [ ] **GRAPH-02**: System deduplicates entities using fuzzy matching (same entity, different surface forms)
+- [ ] **GRAPH-03**: System stores the knowledge graph in KuzuDB (pip-installable embedded graph database)
+- [ ] **GRAPH-04**: System links graph entities back to source chunks for citation retrieval
+
+### Query & Answer
+
+- [ ] **QUERY-01**: User can submit a natural language question and receive a synthesized answer
+- [ ] **QUERY-02**: System retrieves relevant chunks via vector similarity (local search)
+- [ ] **QUERY-03**: System augments retrieval with graph-traversal context (entity neighborhood expansion)
+- [ ] **QUERY-04**: Every answer includes source citations (document name, page/slide reference)
+- [ ] **QUERY-05**: LLM answer generation uses local model via LM Studio (Qwen2.5 7B q4 or equivalent)
+
+### Chat UI
+
+- [ ] **UI-01**: User can interact with the system via a browser-based Streamlit chat interface
+- [ ] **UI-02**: Chat history is maintained within a session (user sees previous Q&A pairs)
+
+## v2 Requirements
+
+### Ingestion
+
+- **INGEST-V2-01**: System skips already-indexed documents on re-run (incremental indexing)
+- **INGEST-V2-02**: System flags content containing tables or diagrams for manual review in query output
+
+### Knowledge Graph
+
+- **GRAPH-V2-01**: Community detection clusters entities into themes for global synthesis queries
+- **GRAPH-V2-02**: Graph explosion guard enforces entity type whitelist, confidence threshold, and per-document caps
+
+### Chat UI
+
+- **UI-V2-01**: User can filter query results by document type, date range, or keyword
+- **UI-V2-02**: User can give thumbs up/down feedback on answers for quality tracking
+
+### Performance
+
+- **PERF-V2-01**: System profiles and optimizes indexing throughput to handle 2000+ documents
+- **PERF-V2-02**: VRAM monitoring alerts user if model combination approaches 4GB ceiling
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Image/visual embeddings (colqwen2.5 etc.) | v1 failure — 5 min/page made full corpus indexing infeasible |
+| Cloud or external API calls | Firewall-restricted corporate laptop; air-gap friendly required |
+| Multi-user authentication | Single-user tool; no shared infrastructure |
+| Structured parsing of tables/charts as data | Too brittle on diverse consulting formats; manual review instead |
+| Real-time document sync / file watching | Batch ingestion sufficient for consulting workflow |
+| Fine-tuning or training models | Out of scope for this phase; local inference only |
+| Any package requiring non-pip installation | Corporate firewall blocks conda, Docker, system packages |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| INGEST-01 | TBD | Pending |
+| INGEST-02 | TBD | Pending |
+| INGEST-03 | TBD | Pending |
+| EMBED-01 | TBD | Pending |
+| EMBED-02 | TBD | Pending |
+| EMBED-03 | TBD | Pending |
+| GRAPH-01 | TBD | Pending |
+| GRAPH-02 | TBD | Pending |
+| GRAPH-03 | TBD | Pending |
+| GRAPH-04 | TBD | Pending |
+| QUERY-01 | TBD | Pending |
+| QUERY-02 | TBD | Pending |
+| QUERY-03 | TBD | Pending |
+| QUERY-04 | TBD | Pending |
+| QUERY-05 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
