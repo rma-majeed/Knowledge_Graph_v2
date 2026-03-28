@@ -7,9 +7,9 @@
 
 ### Ingestion
 
-- [ ] **INGEST-01**: System extracts full text content from PDF files using PyMuPDF
-- [ ] **INGEST-02**: System extracts text from PPTX files including slide text, speaker notes, and table cells via python-pptx
-- [ ] **INGEST-03**: System chunks extracted text into segments suitable for embedding and graph extraction
+- [x] **INGEST-01**: System extracts full text content from PDF files using PyMuPDF
+- [x] **INGEST-02**: System extracts text from PPTX files including slide text, speaker notes, and table cells via python-pptx
+- [x] **INGEST-03**: System chunks extracted text into segments suitable for embedding and graph extraction
 
 ### Embedding & Vector Store
 
@@ -75,9 +75,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INGEST-01 | Phase 1 | Pending |
-| INGEST-02 | Phase 1 | Pending |
-| INGEST-03 | Phase 1 | Pending |
+| INGEST-01 | Phase 1 | Complete |
+| INGEST-02 | Phase 1 | Complete |
+| INGEST-03 | Phase 1 | Complete |
 | EMBED-01 | Phase 2 | Pending |
 | EMBED-02 | Phase 2 | Pending |
 | EMBED-03 | Phase 2 | Pending |

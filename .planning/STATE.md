@@ -1,8 +1,25 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: 01
+current_plan: 1
+status: unknown
+last_updated: "2026-03-28T03:41:31.085Z"
+last_activity: 2026-03-28
+progress:
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 6
+  completed_plans: 1
+  percent: 17
+---
+
 # Project State: Automotive Consulting GraphRAG Agent
 
 **Project:** Automotive Consulting GraphRAG Agent (Local GraphRAG for automotive consulting document intelligence)
 **Created:** 2026-03-28
-**Current Phase:** Roadmap Complete — Awaiting Phase 1 Planning
+**Current Phase:** 01
 
 ---
 
@@ -17,6 +34,7 @@
 **Users:** Non-technical automotive consultants; single-user tool for institutional knowledge discovery.
 
 **Scope Lock (v1):**
+
 - Text extraction only (no visual embeddings; v1 failure at 5+ min/page)
 - PDF + PPTX only (no Word, Excel, email)
 - pip install only (no Docker, conda, system packages)
@@ -27,16 +45,19 @@
 
 ## Current Position
 
-**Milestone:** Initial Roadmap Created
-**Current Phase:** None (pre-Phase 1)
-**Current Plan:** None (awaiting planning)
-**Progress:** Roadmap Complete (17/17 requirements mapped)
+Phase: 01 (document-ingestion-foundation) — EXECUTING
+Plan: 2 of 6 (01-02-pdf-extractor next)
+**Milestone:** Phase 1 In Progress
+**Current Phase:** 01-document-ingestion-foundation
+**Current Plan:** 2 (01-02-pdf-extractor)
+**Progress:** [██░░░░░░░░] 17%
 
 **Next Steps:**
-1. Use `/gsd:plan-phase 1` to decompose Phase 1 (Document Ingestion) into executable plans
-2. Execute Phase 1 plans (text extraction, chunk store, file upload API)
-3. Validate on 100-document sample; confirm performance targets met
-4. Transition to Phase 2
+
+1. Execute Plan 01-02 (PDF extractor — src/ingest/pdf_extractor.py)
+2. Execute Plan 01-03 (PPTX extractor — src/ingest/pptx_extractor.py)
+3. Execute Plan 01-04 (SQLite chunk store — src/ingest/store.py)
+4. Execute Plans 01-05 and 01-06 (chunker and pipeline)
 
 ---
 
@@ -49,6 +70,7 @@
 **Full query (retrieve + generate):** 10–15 seconds
 
 **VRAM constraints:**
+
 - nomic-embed-text-1.5: ~1.5GB
 - Qwen2.5 7B q4_k_m: ~3.8GB
 - Sequential execution required (models must not overlap in memory)
@@ -97,6 +119,7 @@ All phases depend on LM Studio being available and functional.
 | ChromaDB for vectors | Local persistent, sufficient for ≤1M vectors (2000 docs = ~500K chunks) | Locked |
 | SQLite for chunks + metadata | Zero external process, native Python support, proven for this scale | Locked |
 | Streamlit for UI | Best ease-of-use for non-technical consultants; rapid iteration | Locked |
+| xfail(strict=False) stubs for TDD wave-0 | Keeps test intent visible and stubs automatically pass once implementation lands | 01-01 |
 
 ---
 
@@ -123,6 +146,7 @@ Five independent pipelines sharing SQLite + ChromaDB + KuzuDB:
 ### Blockers
 
 None. All prerequisites met:
+
 - LM Studio running with nomic-embed-text and Qwen2.5 7B loaded
 - 32GB RAM + 4GB VRAM available
 - Sample documents available for validation
@@ -132,15 +156,17 @@ None. All prerequisites met:
 
 ## Session Continuity
 
-**Last Activity:** Roadmap creation
-**Files Written:** ROADMAP.md, STATE.md, REQUIREMENTS.md (traceability updated)
-**Git Status:** Ready to commit
+**Last Activity:** 2026-03-28
+**Stopped At:** Completed 01-01-test-infrastructure-PLAN.md
+**Files Written:** requirements.txt, tests/conftest.py, tests/fixtures/sample.pdf, tests/fixtures/sample.pptx, tests/test_extraction.py, tests/test_chunking.py, tests/test_dedup.py, tests/test_ingest_e2e.py
+**Git Status:** Clean (3 task commits made)
 
 **To Resume:**
+
 1. `cd c:/Users/2171176/Documents/Python/Knowledge_Graph_v2`
-2. `cat .planning/ROADMAP.md` to review phase structure
-3. `/gsd:plan-phase 1` to decompose Phase 1 into executable plans
+2. Execute Plan 01-02: `src/ingest/pdf_extractor.py`
+3. Run `pytest tests/test_extraction.py -v` to verify extraction tests pass
 
 ---
 
-**Roadmap created. Ready for phase planning.**
+**Plan 01-01 complete. Test infrastructure ready. Wave 0 satisfied.**

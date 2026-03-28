@@ -3,7 +3,7 @@
 **Project:** Automotive Consulting GraphRAG Agent
 **Created:** 2026-03-28
 **Granularity:** Standard (5-8 phases)
-**Status:** Ready for phase planning
+**Status:** Phase 1 planned — ready for execution
 
 ---
 
@@ -34,7 +34,15 @@
 4. Chunk metadata (source document, page/slide number, chunk offset) is stored alongside chunk text
 5. System indexes 100-document sample in under 30 seconds (establishes performance baseline)
 
-**Plans:** TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 01-PLAN-01-test-infrastructure.md — pytest infrastructure, synthetic fixtures, dependency install, xfail stubs
+- [ ] 01-PLAN-02-pdf-extractor.md — PDF text extraction with PyMuPDF (Wave 1, parallel with Plan 03)
+- [ ] 01-PLAN-03-pptx-extractor.md — PPTX text + notes + tables extraction with python-pptx (Wave 1, parallel with Plan 02)
+- [ ] 01-PLAN-04-sqlite-chunk-store.md — SQLite schema, ChunkStore class, SHA-256 deduplication (Wave 2, parallel with Plan 05)
+- [ ] 01-PLAN-05-text-chunker.md — 512-token fixed-size chunking with 100-token overlap via tiktoken (Wave 2, parallel with Plan 04)
+- [ ] 01-PLAN-06-ingestion-pipeline.md — End-to-end pipeline wiring + CLI entry point (Wave 3)
 
 ### Phase 2: Embedding & Vector Search
 
@@ -114,7 +122,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Document Ingestion Foundation | 0/4 | Not started | - |
+| 1. Document Ingestion Foundation | 0/6 | Planned | - |
 | 2. Embedding & Vector Search | 0/3 | Not started | - |
 | 3. Knowledge Graph Construction | 0/4 | Not started | - |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
@@ -136,5 +144,4 @@
 | Query (QUERY) | 5 | Phase 4 |
 | Chat UI (UI) | 2 | Phase 5 |
 
-**Status:** All requirements mapped. Coverage = 100%. Ready for planning.
-
+**Status:** All requirements mapped. Coverage = 100%. Phase 1 plans created — ready for execution.
