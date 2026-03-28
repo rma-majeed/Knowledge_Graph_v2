@@ -3,16 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 01
-current_plan: 1
+current_plan: 3 (01-03-pptx-extractor)
 status: unknown
-last_updated: "2026-03-28T03:41:31.085Z"
+stopped_at: Completed 01-03-pptx-extractor-PLAN.md
+last_updated: "2026-03-28T03:49:43.339Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
-  percent: 17
+  completed_plans: 3
+  percent: 50
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -46,18 +47,17 @@ progress:
 ## Current Position
 
 Phase: 01 (document-ingestion-foundation) — EXECUTING
-Plan: 2 of 6 (01-02-pdf-extractor next)
+Plan: 4 of 6 (01-03-pptx-extractor next)
 **Milestone:** Phase 1 In Progress
 **Current Phase:** 01-document-ingestion-foundation
-**Current Plan:** 2 (01-02-pdf-extractor)
-**Progress:** [██░░░░░░░░] 17%
+**Current Plan:** 3 (01-03-pptx-extractor)
+**Progress:** [█████░░░░░] 50%
 
 **Next Steps:**
 
-1. Execute Plan 01-02 (PDF extractor — src/ingest/pdf_extractor.py)
-2. Execute Plan 01-03 (PPTX extractor — src/ingest/pptx_extractor.py)
-3. Execute Plan 01-04 (SQLite chunk store — src/ingest/store.py)
-4. Execute Plans 01-05 and 01-06 (chunker and pipeline)
+1. Execute Plan 01-03 (PPTX extractor — src/ingest/pptx_extractor.py)
+2. Execute Plan 01-04 (SQLite chunk store — src/ingest/store.py)
+3. Execute Plans 01-05 and 01-06 (chunker and pipeline)
 
 ---
 
@@ -120,6 +120,8 @@ All phases depend on LM Studio being available and functional.
 | SQLite for chunks + metadata | Zero external process, native Python support, proven for this scale | Locked |
 | Streamlit for UI | Best ease-of-use for non-technical consultants; rapid iteration | Locked |
 | xfail(strict=False) stubs for TDD wave-0 | Keeps test intent visible and stubs automatically pass once implementation lands | 01-01 |
+| extract_pdf() try/finally with doc.close() | Prevents fitz file handle leaks on all code paths including exceptions | 01-02 |
+| Table cell text appended after plain text | Simpler than interleaving — avoids position tracking complexity | 01-02 |
 
 ---
 
@@ -157,16 +159,16 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-28
-**Stopped At:** Completed 01-01-test-infrastructure-PLAN.md
-**Files Written:** requirements.txt, tests/conftest.py, tests/fixtures/sample.pdf, tests/fixtures/sample.pptx, tests/test_extraction.py, tests/test_chunking.py, tests/test_dedup.py, tests/test_ingest_e2e.py
-**Git Status:** Clean (3 task commits made)
+**Stopped At:** Completed 01-03-pptx-extractor-PLAN.md
+**Files Written:** src/__init__.py, src/ingest/__init__.py, src/ingest/pdf_extractor.py, tests/test_extraction.py (xfail removed from 3 PDF tests)
+**Git Status:** Clean (task commit e164dd3 made)
 
 **To Resume:**
 
 1. `cd c:/Users/2171176/Documents/Python/Knowledge_Graph_v2`
-2. Execute Plan 01-02: `src/ingest/pdf_extractor.py`
-3. Run `pytest tests/test_extraction.py -v` to verify extraction tests pass
+2. Execute Plan 01-03: `src/ingest/pptx_extractor.py`
+3. Run `pytest tests/test_extraction.py -v` to verify PPTX tests pass
 
 ---
 
-**Plan 01-01 complete. Test infrastructure ready. Wave 0 satisfied.**
+**Plan 01-02 complete. PDF extraction ready. 3 PDF tests pass (3 passed, 15 xfailed).**
