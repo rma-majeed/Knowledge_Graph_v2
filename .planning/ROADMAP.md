@@ -41,7 +41,7 @@ Plans:
 - [ ] 01-PLAN-02-pdf-extractor.md — PDF text extraction with PyMuPDF (Wave 1, parallel with Plan 03)
 - [ ] 01-PLAN-03-pptx-extractor.md — PPTX text + notes + tables extraction with python-pptx (Wave 1, parallel with Plan 02)
 - [ ] 01-PLAN-04-sqlite-chunk-store.md — SQLite schema, ChunkStore class, SHA-256 deduplication (Wave 2, parallel with Plan 05)
-- [ ] 01-PLAN-05-text-chunker.md — 512-token fixed-size chunking with 100-token overlap via tiktoken (Wave 2, parallel with Plan 04)
+- [x] 01-PLAN-05-text-chunker.md — 512-token fixed-size chunking with 100-token overlap via tiktoken (Wave 2, parallel with Plan 04)
 - [ ] 01-PLAN-06-ingestion-pipeline.md — End-to-end pipeline wiring + CLI entry point (Wave 3)
 
 ### Phase 2: Embedding & Vector Search

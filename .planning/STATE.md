@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 01
-current_plan: 3 (01-03-pptx-extractor)
+current_plan: 5 (01-05-text-chunker)
 status: unknown
-stopped_at: Completed 01-03-pptx-extractor-PLAN.md
-last_updated: "2026-03-28T03:49:43.339Z"
+stopped_at: Completed 01-05-text-chunker-PLAN.md
+last_updated: "2026-03-28T03:56:26.559Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 6
-  completed_plans: 3
-  percent: 50
+  total_plans: 0
+  completed_plans: 4
+  percent: 0
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -47,17 +47,15 @@ progress:
 ## Current Position
 
 Phase: 01 (document-ingestion-foundation) — EXECUTING
-Plan: 4 of 6 (01-03-pptx-extractor next)
+Plan: 5 of 6 (01-05-text-chunker complete)
 **Milestone:** Phase 1 In Progress
 **Current Phase:** 01-document-ingestion-foundation
-**Current Plan:** 3 (01-03-pptx-extractor)
-**Progress:** [█████░░░░░] 50%
+**Current Plan:** 5 (01-05-text-chunker — COMPLETE)
+**Progress:** [████░░░░░░] 67%
 
 **Next Steps:**
 
-1. Execute Plan 01-03 (PPTX extractor — src/ingest/pptx_extractor.py)
-2. Execute Plan 01-04 (SQLite chunk store — src/ingest/store.py)
-3. Execute Plans 01-05 and 01-06 (chunker and pipeline)
+1. Execute Plan 01-06 (ingestion pipeline — src/ingest/pipeline.py)
 
 ---
 
@@ -122,6 +120,8 @@ All phases depend on LM Studio being available and functional.
 | xfail(strict=False) stubs for TDD wave-0 | Keeps test intent visible and stubs automatically pass once implementation lands | 01-01 |
 | extract_pdf() try/finally with doc.close() | Prevents fitz file handle leaks on all code paths including exceptions | 01-02 |
 | Table cell text appended after plain text | Simpler than interleaving — avoids position tracking complexity | 01-02 |
+| tiktoken cl100k_base encoder singleton | Caches vocab after first load (~100ms) to avoid reload per call during batch indexing of 500+ docs | 01-05 |
+| Token-level sliding window (step=chunk_size-overlap) | Guarantees exact overlap count (100 tokens) between adjacent chunks for retrieval quality | 01-05 |
 
 ---
 
@@ -159,16 +159,16 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-28
-**Stopped At:** Completed 01-03-pptx-extractor-PLAN.md
-**Files Written:** src/__init__.py, src/ingest/__init__.py, src/ingest/pdf_extractor.py, tests/test_extraction.py (xfail removed from 3 PDF tests)
-**Git Status:** Clean (task commit e164dd3 made)
+**Stopped At:** Completed 01-05-text-chunker-PLAN.md
+**Files Written:** src/ingest/chunker.py (created), tests/test_chunking.py (xfail removed from 5 tests)
+**Git Status:** Clean (task commit e780e05 made)
 
 **To Resume:**
 
-1. `cd c:/Users/2171176/Documents/Python/Knowledge_Graph_v2`
-2. Execute Plan 01-03: `src/ingest/pptx_extractor.py`
-3. Run `pytest tests/test_extraction.py -v` to verify PPTX tests pass
+1. `cd c:/Users/2171176/Documents/Python/Knowledge_Graph_v2/.claude/worktrees/agent-a7e35770`
+2. Execute Plan 01-06: `src/ingest/pipeline.py`
+3. Run `pytest tests/ -q` to verify full suite passes
 
 ---
 
-**Plan 01-02 complete. PDF extraction ready. 3 PDF tests pass (3 passed, 15 xfailed).**
+**Plan 01-05 complete. chunk_text() ready with tiktoken cl100k_base. 5 chunking tests pass (11 passed, 7 xfailed total).**
