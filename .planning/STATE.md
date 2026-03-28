@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 01
-current_plan: 5 (01-05-text-chunker)
-status: unknown
-stopped_at: Completed 01-05-text-chunker-PLAN.md
-last_updated: "2026-03-28T03:56:26.559Z"
+current_plan: 6 (01-06-ingestion-pipeline — COMPLETE)
+status: phase-complete
+stopped_at: Completed 01-06-ingestion-pipeline-PLAN.md
+last_updated: "2026-03-28T04:05:39.795Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 0
-  completed_plans: 4
+  completed_plans: 6
   percent: 0
 ---
 
@@ -46,16 +46,16 @@ progress:
 
 ## Current Position
 
-Phase: 01 (document-ingestion-foundation) — EXECUTING
-Plan: 5 of 6 (01-05-text-chunker complete)
-**Milestone:** Phase 1 In Progress
+Phase: 01 (document-ingestion-foundation) — COMPLETE
+Plan: 6 of 6 (01-06-ingestion-pipeline complete)
+**Milestone:** Phase 1 Complete
 **Current Phase:** 01-document-ingestion-foundation
-**Current Plan:** 5 (01-05-text-chunker — COMPLETE)
-**Progress:** [████░░░░░░] 67%
+**Current Plan:** 6 (01-06-ingestion-pipeline — COMPLETE)
+**Progress:** [██████████] 100% (Phase 1)
 
 **Next Steps:**
 
-1. Execute Plan 01-06 (ingestion pipeline — src/ingest/pipeline.py)
+1. Begin Phase 2: Embedding (LM Studio nomic-embed-text-1.5 -> ChromaDB)
 
 ---
 
@@ -122,6 +122,9 @@ All phases depend on LM Studio being available and functional.
 | Table cell text appended after plain text | Simpler than interleaving — avoids position tracking complexity | 01-02 |
 | tiktoken cl100k_base encoder singleton | Caches vocab after first load (~100ms) to avoid reload per call during batch indexing of 500+ docs | 01-05 |
 | Token-level sliding window (step=chunk_size-overlap) | Guarantees exact overlap count (100 tokens) between adjacent chunks for retrieval quality | 01-05 |
+| sys.path bootstrap in src/main.py | Enables `python src/main.py` execution without PYTHONPATH — avoids env configuration burden | 01-06 |
+| ingest_document() opens/closes its own SQLite connection | Connection-per-call isolation prevents state leaks between files in batch ingestion | 01-06 |
+| PPTX slide_num normalized to page_num in pipeline layer | Uniform DB schema — downstream queries use page_num regardless of source doc type | 01-06 |
 
 ---
 
@@ -159,16 +162,20 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-28
-**Stopped At:** Completed 01-05-text-chunker-PLAN.md
-**Files Written:** src/ingest/chunker.py (created), tests/test_chunking.py (xfail removed from 5 tests)
-**Git Status:** Clean (task commit e780e05 made)
+**Stopped At:** Completed 01-06-ingestion-pipeline-PLAN.md
+**Files Written:** src/ingest/pipeline.py (created), src/main.py (created), tests/test_ingest_e2e.py (xfail removed from 4 tests)
+**Git Status:** Clean (task commits 17a0562, ce23ded made)
 
-**To Resume:**
+**Phase 1 Complete — Ready for Phase 2:**
 
-1. `cd c:/Users/2171176/Documents/Python/Knowledge_Graph_v2/.claude/worktrees/agent-a7e35770`
-2. Execute Plan 01-06: `src/ingest/pipeline.py`
-3. Run `pytest tests/ -q` to verify full suite passes
+All Phase 1 components implemented and tested (18 tests, 0 failures):
+- PDF extraction (extract_pdf)
+- PPTX extraction (extract_pptx)
+- Text chunking with tiktoken cl100k_base (chunk_text)
+- SQLite chunk store with SHA-256 deduplication (ChunkStore)
+- End-to-end pipeline (ingest_document, ingest_directory)
+- CLI entry point (python src/main.py ingest)
 
 ---
 
-**Plan 01-05 complete. chunk_text() ready with tiktoken cl100k_base. 5 chunking tests pass (11 passed, 7 xfailed total).**
+**Plan 01-06 complete. Phase 1 DONE. All 18 tests pass. CLI verified: Documents ingested: 2, Total chunks stored: 5 for fixtures/.**

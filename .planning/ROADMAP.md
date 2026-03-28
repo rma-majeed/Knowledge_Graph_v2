@@ -3,13 +3,13 @@
 **Project:** Automotive Consulting GraphRAG Agent
 **Created:** 2026-03-28
 **Granularity:** Standard (5-8 phases)
-**Status:** Phase 1 planned — ready for execution
+**Status:** Phase 1 complete — ready for Phase 2
 
 ---
 
 ## Phases
 
-- [ ] **Phase 1: Document Ingestion Foundation** - Extract text from PDF and PPTX files into a chunk store
+- [x] **Phase 1: Document Ingestion Foundation** - Extract text from PDF and PPTX files into a chunk store
 - [ ] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval
 - [ ] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph
 - [ ] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions
@@ -37,12 +37,12 @@
 **Plans:** 6 plans
 
 Plans:
-- [ ] 01-PLAN-01-test-infrastructure.md — pytest infrastructure, synthetic fixtures, dependency install, xfail stubs
-- [ ] 01-PLAN-02-pdf-extractor.md — PDF text extraction with PyMuPDF (Wave 1, parallel with Plan 03)
-- [ ] 01-PLAN-03-pptx-extractor.md — PPTX text + notes + tables extraction with python-pptx (Wave 1, parallel with Plan 02)
-- [ ] 01-PLAN-04-sqlite-chunk-store.md — SQLite schema, ChunkStore class, SHA-256 deduplication (Wave 2, parallel with Plan 05)
+- [x] 01-PLAN-01-test-infrastructure.md — pytest infrastructure, synthetic fixtures, dependency install, xfail stubs
+- [x] 01-PLAN-02-pdf-extractor.md — PDF text extraction with PyMuPDF (Wave 1, parallel with Plan 03)
+- [x] 01-PLAN-03-pptx-extractor.md — PPTX text + notes + tables extraction with python-pptx (Wave 1, parallel with Plan 02)
+- [x] 01-PLAN-04-sqlite-chunk-store.md — SQLite schema, ChunkStore class, SHA-256 deduplication (Wave 2, parallel with Plan 05)
 - [x] 01-PLAN-05-text-chunker.md — 512-token fixed-size chunking with 100-token overlap via tiktoken (Wave 2, parallel with Plan 04)
-- [ ] 01-PLAN-06-ingestion-pipeline.md — End-to-end pipeline wiring + CLI entry point (Wave 3)
+- [x] 01-PLAN-06-ingestion-pipeline.md — End-to-end pipeline wiring + CLI entry point (Wave 4) COMPLETE
 
 ### Phase 2: Embedding & Vector Search
 
