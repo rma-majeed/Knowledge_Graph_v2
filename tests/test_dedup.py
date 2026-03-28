@@ -7,7 +7,6 @@ import tempfile
 from pathlib import Path
 
 
-@pytest.mark.xfail(strict=False, reason="stub — store not yet implemented")
 def test_file_hash_sha256(sample_pdf_path):
     """compute_file_hash returns consistent SHA-256 hex string."""
     from src.ingest.store import compute_file_hash
@@ -18,7 +17,6 @@ def test_file_hash_sha256(sample_pdf_path):
     assert all(c in "0123456789abcdef" for c in h1)
 
 
-@pytest.mark.xfail(strict=False, reason="stub — store not yet implemented")
 def test_file_hash_dedup(tmp_db_conn, sample_pdf_path):
     """is_document_indexed returns True for already-ingested document."""
     from src.ingest.store import ChunkStore
@@ -38,7 +36,6 @@ def test_file_hash_dedup(tmp_db_conn, sample_pdf_path):
     assert store.is_document_indexed(sample_pdf_path)
 
 
-@pytest.mark.xfail(strict=False, reason="stub — store not yet implemented")
 def test_different_files_have_different_hashes(sample_pdf_path, sample_pptx_path):
     """Different files produce different hashes."""
     from src.ingest.store import compute_file_hash
