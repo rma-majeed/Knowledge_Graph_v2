@@ -6,7 +6,6 @@ src/ingest/pptx_extractor.py are implemented (Plan 02 and Plan 03).
 import pytest
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pdf_extractor not yet implemented")
 def test_pdf_extract_text(sample_pdf_path):
     """PDF extractor returns text with page numbers."""
     from src.ingest.pdf_extractor import extract_pdf
@@ -16,7 +15,6 @@ def test_pdf_extract_text(sample_pdf_path):
     assert "Automotive" in pages[0]["text"]
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pdf_extractor not yet implemented")
 def test_pdf_extract_tables(sample_pdf_path):
     """PDF extractor includes table cell text in page output."""
     from src.ingest.pdf_extractor import extract_pdf
@@ -25,7 +23,6 @@ def test_pdf_extract_tables(sample_pdf_path):
     assert "Toyota" in all_text  # Table cell content
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pdf_extractor not yet implemented")
 def test_pdf_extract_returns_page_count(sample_pdf_path):
     """Page count in result matches actual PDF page count."""
     from src.ingest.pdf_extractor import extract_pdf
