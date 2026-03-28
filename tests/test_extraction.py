@@ -30,7 +30,6 @@ def test_pdf_extract_returns_page_count(sample_pdf_path):
     assert len(pages) == 2
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pptx_extractor not yet implemented")
 def test_pptx_extract_slides(sample_pptx_path):
     """PPTX extractor returns text for each slide with slide numbers."""
     from src.ingest.pptx_extractor import extract_pptx
@@ -40,7 +39,6 @@ def test_pptx_extract_slides(sample_pptx_path):
     assert "EV Strategy" in slides[0]["text"]
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pptx_extractor not yet implemented")
 def test_pptx_extract_notes(sample_pptx_path):
     """PPTX extractor includes speaker notes in slide output."""
     from src.ingest.pptx_extractor import extract_pptx
@@ -49,7 +47,6 @@ def test_pptx_extract_notes(sample_pptx_path):
     assert "Speaker note" in slides[0]["text"] or "Emphasize" in slides[0]["text"]
 
 
-@pytest.mark.xfail(strict=False, reason="stub — pptx_extractor not yet implemented")
 def test_pptx_extract_tables(sample_pptx_path):
     """PPTX extractor includes table cell text from slide 3."""
     from src.ingest.pptx_extractor import extract_pptx
