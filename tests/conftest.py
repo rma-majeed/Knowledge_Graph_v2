@@ -3,6 +3,13 @@ import pytest
 import sqlite3
 from pathlib import Path
 
+
+def pytest_configure(config):
+    """Register custom marks to suppress PytestUnknownMarkWarning."""
+    config.addinivalue_line(
+        "markers", "integration: marks tests that require external services (e.g. LM Studio)"
+    )
+
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
