@@ -87,6 +87,56 @@ def cmd_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_embed(args: argparse.Namespace) -> int:
+    """Run the embedding pipeline on all pending chunks."""
+    import sqlite3
+    import chromadb
+    from src.embed.pipeline import check_lm_studio, embed_all_chunks
+
+    db_path = Path(args.db)
+    chroma_path = Path(args.chroma)
+
+    if not db_path.exists():
+        print(f"Error: Database not found: {db_path}", file=sys.stderr)
+        return 1
+
+    # Ensure chroma directory exists
+    chroma_path.mkdir(parents=True, exist_ok=True)
+
+    # Health check before connecting to LM Studio
+    if not check_lm_studio():
+        print(
+            "Error: LM Studio is not running or not reachable at localhost:1234.\n"
+            "Start LM Studio, load the embedding model, and retry.",
+            file=sys.stderr,
+        )
+        return 1
+
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+
+    try:
+        chroma_client = chromadb.PersistentClient(path=str(chroma_path))
+        start = time.perf_counter()
+        result = embed_all_chunks(
+            conn=conn,
+            chroma_client=chroma_client,
+            model=args.model,
+        )
+        elapsed = time.perf_counter() - start
+        print(
+            f"\nEmbedding complete in {elapsed:.2f}s\n"
+            f"  Chunks embedded: {result['chunks_embedded']}\n"
+            f"  API batches: {result['batches']}\n"
+            f"  ChromaDB: {chroma_path}"
+        )
+    finally:
+        conn.close()
+
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="graphrag",
@@ -108,6 +158,20 @@ def main() -> int:
         "--db", default="data/chunks.db", help="SQLite database path (default: data/chunks.db)"
     )
     p_stats.set_defaults(func=cmd_stats)
+
+    # embed subcommand
+    p_embed = subparsers.add_parser("embed", help="Generate embeddings for pending chunks")
+    p_embed.add_argument(
+        "--db", default="data/chunks.db", help="SQLite database path (default: data/chunks.db)"
+    )
+    p_embed.add_argument(
+        "--chroma", default="data/chroma_db", help="ChromaDB path (default: data/chroma_db)"
+    )
+    p_embed.add_argument(
+        "--model", default="nomic-embed-text-v1.5",
+        help="LM Studio embedding model name (default: nomic-embed-text-v1.5)"
+    )
+    p_embed.set_defaults(func=cmd_embed)
 
     args = parser.parse_args()
     return args.func(args)
