@@ -62,9 +62,9 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 02-01-test-infrastructure-PLAN.md — chromadb install, src/embed/ stubs, 12 xfail test stubs (Wave 1)
+- [x] 02-01-test-infrastructure-PLAN.md — chromadb install, src/embed/ stubs, 12 xfail test stubs (Wave 1)
 - [ ] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
-- [ ] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
+- [x] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
 - [ ] 02-04-embedding-pipeline-PLAN.md — embed_all_chunks() pipeline + embed CLI subcommand (Wave 3)
 
 ### Phase 3: Knowledge Graph Construction
