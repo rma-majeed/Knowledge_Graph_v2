@@ -9,6 +9,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "integration: marks tests that require external services (e.g. LM Studio)"
     )
+    config.addinivalue_line(
+        "markers", "lm_studio: marks tests that require LM Studio running locally"
+    )
 
 
 @pytest.fixture(autouse=True)

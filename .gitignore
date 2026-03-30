@@ -1,3 +1,7 @@
 # ChromaDB persistence data (tracked directory, not data files)
 data/chroma_db/
 !data/chroma_db/.gitkeep
+
+# KuzuDB graph data
+data/kuzu_db/
+!data/kuzu_db/.gitkeep
