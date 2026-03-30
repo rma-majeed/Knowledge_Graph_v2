@@ -201,6 +201,42 @@ class ChunkStore:
         )
         self.conn.commit()
 
+    def get_chunks_with_metadata_for_embedding(
+        self, batch_size: int = 8
+    ) -> list[sqlite3.Row]:
+        """Retrieve a batch of unembedded chunks with document metadata for embedding.
+
+        JOINs chunks with documents to return filename, page_num, chunk_index, and
+        token_count alongside chunk_id and chunk_text. The embedding pipeline uses
+        these fields to populate ChromaDB metadata for citation at query time.
+
+        Args:
+            batch_size: Maximum number of chunks to return (default 8, conservative
+                for LM Studio VRAM stability).
+
+        Returns:
+            List of sqlite3.Row objects with columns:
+                chunk_id, chunk_text, doc_id, filename, page_num, chunk_index, token_count
+            Returns [] when no unembedded chunks remain.
+        """
+        return self.conn.execute(
+            """
+            SELECT
+                c.chunk_id,
+                c.chunk_text,
+                c.doc_id,
+                d.filename,
+                c.page_num,
+                c.chunk_index,
+                c.token_count
+            FROM chunks c
+            JOIN documents d ON c.doc_id = d.doc_id
+            WHERE c.embedding_flag = 0
+            LIMIT ?
+            """,
+            (batch_size,),
+        ).fetchall()
+
 
 # Inline schema fallback (matches src/db/schema.sql exactly)
 _INLINE_SCHEMA = """
