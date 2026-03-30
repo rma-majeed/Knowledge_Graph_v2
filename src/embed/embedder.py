@@ -1,7 +1,4 @@
-"""Embedding generation via LM Studio OpenAI-compatible API.
-
-Stub — implementation in Phase 2 Plan 02.
-"""
+"""Embedding generation via LM Studio OpenAI-compatible API."""
 from __future__ import annotations
 
 from typing import Any
@@ -25,9 +22,36 @@ def embed_chunks(
         List of embedding vectors (list[float]) in the same order as chunks.
 
     Raises:
-        NotImplementedError: Until Plan 02 implements this function.
+        RuntimeError: When the LM Studio server is unreachable.
     """
-    raise NotImplementedError("embed_chunks not yet implemented — see Plan 02")
+    if not chunks:
+        return []
+
+    import httpx
+
+    results: list[list[float]] = []
+
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
+        texts = [c["chunk_text"].strip() for c in batch]
+
+        # If all texts in the batch are empty/whitespace, use zero vectors
+        if all(t == "" for t in texts):
+            results.extend([[0.0] * 768 for _ in batch])
+            continue
+
+        try:
+            import openai
+
+            response = client.embeddings.create(model=model, input=texts)
+            vectors = [item.embedding for item in response.data]
+            results.extend(vectors)
+        except (openai.APIConnectionError, httpx.ConnectError, httpx.TimeoutException) as e:
+            raise RuntimeError(
+                f"LM Studio server unavailable at localhost:1234 — {e!r}"
+            ) from e
+
+    return results
 
 
 def embed_query(query_text: str, client: Any, model: str) -> list[float]:
@@ -40,8 +64,5 @@ def embed_query(query_text: str, client: Any, model: str) -> list[float]:
 
     Returns:
         Single embedding vector as list[float].
-
-    Raises:
-        NotImplementedError: Until Plan 02 implements this function.
     """
-    raise NotImplementedError("embed_query not yet implemented — see Plan 02")
+    return embed_chunks([{"chunk_text": query_text}], client, model)[0]
