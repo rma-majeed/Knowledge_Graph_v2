@@ -82,13 +82,13 @@ Plans:
 4. Each graph entity is linked to source chunks; user can trace any entity back to the documents that mention it
 5. System detects and prevents graph explosion (entity extraction too permissive) via monitoring entity count growth rate relative to document count
 
-**Plans:** 2/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 03-01-test-infrastructure-PLAN.md — kuzu/rapidfuzz install, src/graph/ stubs, 23 xfail stubs across 4 test files (Wave 1)
-- [ ] 03-02-extractor-PLAN.md — extract_entities_relationships() via LM Studio LLM with entity type whitelist + confidence filter (Wave 2, parallel with Plan 03)
+- [x] 03-02-extractor-PLAN.md — extract_entities_relationships() via LM Studio LLM with entity type whitelist + confidence filter (Wave 2, parallel with Plan 03)
 - [x] 03-03-dedup-and-db-PLAN.md — normalize_entity_name(), deduplicate_entities() with RapidFuzz; KuzuDB schema + upsert + query (Wave 2, parallel with Plan 02)
-- [ ] 03-04-citations-and-monitor-PLAN.md — CitationStore SQLite bridge table; check_entity_density() graph explosion guard (Wave 3)
+- [x] 03-04-citations-and-monitor-PLAN.md — CitationStore SQLite bridge table; check_entity_density() graph explosion guard (Wave 3)
 - [ ] 03-05-pipeline-and-cli-PLAN.md — build_knowledge_graph() pipeline wiring + graph CLI subcommand (Wave 4)
 
 ### Phase 4: Query Engine & Answer Generation
@@ -135,7 +135,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
-| 3. Knowledge Graph Construction | 2/5 | In Progress|  |
+| 3. Knowledge Graph Construction | 4/5 | In Progress|  |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
 
