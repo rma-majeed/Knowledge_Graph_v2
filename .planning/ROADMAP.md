@@ -59,12 +59,12 @@ Plans:
 4. VRAM peak during embedding generation stays below 3.5GB (50% safety margin from 4GB ceiling)
 5. Retrieval precision on 20 test queries exceeds 80% (correct documents ranked at top)
 
-**Plans:** 2/4 plans executed
+**Plans:** 4 plans
 
 Plans:
 - [x] 02-01-test-infrastructure-PLAN.md — chromadb install, src/embed/ stubs, 12 xfail test stubs (Wave 1)
-- [x] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
-- [ ] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
+- [ ] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
+- [x] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
 - [ ] 02-04-embedding-pipeline-PLAN.md — embed_all_chunks() pipeline + embed CLI subcommand (Wave 3)
 
 ### Phase 3: Knowledge Graph Construction
@@ -127,7 +127,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
-| 2. Embedding & Vector Search | 2/4 | In Progress|  |
+| 2. Embedding & Vector Search | 0/4 | Planned | - |
 | 3. Knowledge Graph Construction | 0/4 | Not started | - |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
