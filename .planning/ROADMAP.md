@@ -59,7 +59,7 @@ Plans:
 4. VRAM peak during embedding generation stays below 3.5GB (50% safety margin from 4GB ceiling)
 5. Retrieval precision on 20 test queries exceeds 80% (correct documents ranked at top)
 
-**Plans:** TBD
+**Plans:** 1/4 plans executed
 
 **UI hint:** yes
 
@@ -123,7 +123,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Document Ingestion Foundation | 0/6 | Planned | - |
-| 2. Embedding & Vector Search | 0/3 | Not started | - |
+| 2. Embedding & Vector Search | 1/4 | In Progress|  |
 | 3. Knowledge Graph Construction | 0/4 | Not started | - |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |

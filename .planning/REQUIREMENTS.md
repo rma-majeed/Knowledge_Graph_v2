@@ -13,9 +13,9 @@
 
 ### Embedding & Vector Store
 
-- [ ] **EMBED-01**: System generates embeddings for each chunk using a local model served via LM Studio OpenAI-compatible API
-- [ ] **EMBED-02**: System stores chunk embeddings in ChromaDB for semantic retrieval
-- [ ] **EMBED-03**: System stores raw chunk text and document metadata (filename, page/slide number) alongside vectors
+- [x] **EMBED-01**: System generates embeddings for each chunk using a local model served via LM Studio OpenAI-compatible API
+- [x] **EMBED-02**: System stores chunk embeddings in ChromaDB for semantic retrieval
+- [x] **EMBED-03**: System stores raw chunk text and document metadata (filename, page/slide number) alongside vectors
 
 ### Knowledge Graph
 
@@ -78,9 +78,9 @@
 | INGEST-01 | Phase 1 | Complete |
 | INGEST-02 | Phase 1 | Complete |
 | INGEST-03 | Phase 1 | Complete |
-| EMBED-01 | Phase 2 | Pending |
-| EMBED-02 | Phase 2 | Pending |
-| EMBED-03 | Phase 2 | Pending |
+| EMBED-01 | Phase 2 | Complete |
+| EMBED-02 | Phase 2 | Complete |
+| EMBED-03 | Phase 2 | Complete |
 | GRAPH-01 | Phase 3 | Pending |
 | GRAPH-02 | Phase 3 | Pending |
 | GRAPH-03 | Phase 3 | Pending |
