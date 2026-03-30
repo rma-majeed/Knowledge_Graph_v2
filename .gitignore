@@ -1,0 +1,3 @@
+# ChromaDB persistence data (tracked directory, not data files)
+data/chroma_db/
+!data/chroma_db/.gitkeep
