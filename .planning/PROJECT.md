@@ -20,7 +20,7 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [x] Local embedding model served via LM Studio OpenAI-compatible API — *Validated in Phase 2: Embedding & Vector Search*
-- [ ] Knowledge graph captures named entities, relationships, and document communities across the corpus
+- [x] Knowledge graph captures named entities, relationships, and document communities across the corpus — *Validated in Phase 3: Knowledge Graph Construction*
 - [ ] Natural language query returns synthesized answer with source document references
 - [ ] Web chat UI accessible from a browser for consultant use
 - [ ] Full pipeline runs on 32GB RAM + 4GB VRAM without crashing or swapping
@@ -80,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 2 completion — embedding pipeline built: LM Studio embedder, ChromaDB VectorStore, SQLite→embed→ChromaDB incremental pipeline, `embed` CLI subcommand*
+*Last updated: 2026-03-30 after Phase 3 completion — knowledge graph pipeline built: LM Studio LLM extractor, RapidFuzz deduplicator, KuzuDB graph storage, SQLite citation bridge, graph explosion monitor, `graph` CLI subcommand*
