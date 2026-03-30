@@ -19,10 +19,10 @@
 
 ### Knowledge Graph
 
-- [ ] **GRAPH-01**: System extracts named entities and typed relationships from chunks using LLM via LM Studio
-- [ ] **GRAPH-02**: System deduplicates entities using fuzzy matching (same entity, different surface forms)
-- [ ] **GRAPH-03**: System stores the knowledge graph in KuzuDB (pip-installable embedded graph database)
-- [ ] **GRAPH-04**: System links graph entities back to source chunks for citation retrieval
+- [x] **GRAPH-01**: System extracts named entities and typed relationships from chunks using LLM via LM Studio
+- [x] **GRAPH-02**: System deduplicates entities using fuzzy matching (same entity, different surface forms)
+- [x] **GRAPH-03**: System stores the knowledge graph in KuzuDB (pip-installable embedded graph database)
+- [x] **GRAPH-04**: System links graph entities back to source chunks for citation retrieval
 
 ### Query & Answer
 
@@ -81,10 +81,10 @@
 | EMBED-01 | Phase 2 | Complete |
 | EMBED-02 | Phase 2 | Complete |
 | EMBED-03 | Phase 2 | Complete |
-| GRAPH-01 | Phase 3 | Pending |
-| GRAPH-02 | Phase 3 | Pending |
-| GRAPH-03 | Phase 3 | Pending |
-| GRAPH-04 | Phase 3 | Pending |
+| GRAPH-01 | Phase 3 | Complete |
+| GRAPH-02 | Phase 3 | Complete |
+| GRAPH-03 | Phase 3 | Complete |
+| GRAPH-04 | Phase 3 | Complete |
 | QUERY-01 | Phase 4 | Pending |
 | QUERY-02 | Phase 4 | Pending |
 | QUERY-03 | Phase 4 | Pending |
