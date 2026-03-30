@@ -1,10 +1,12 @@
 """ChromaDB vector store wrapper.
 
-Stub — implementation in Phase 2 Plan 03.
+Wraps ChromaDB PersistentClient for chunk embedding storage and retrieval.
+Provides upsert() for idempotent embedding storage and query() for top-N
+semantic search with metadata co-location.
 """
 from __future__ import annotations
 
-from typing import Any
+import chromadb
 
 
 class VectorStore:
@@ -12,13 +14,18 @@ class VectorStore:
 
     Args:
         chroma_path: Path to the ChromaDB persistence directory.
-
-    Raises:
-        NotImplementedError: Until Plan 03 implements this class.
     """
 
     def __init__(self, chroma_path: str = "data/chroma_db") -> None:
-        raise NotImplementedError("VectorStore not yet implemented — see Plan 03")
+        self._client = chromadb.PersistentClient(path=chroma_path)
+        try:
+            self._collection = self._client.get_or_create_collection(
+                name="chunks",
+                configuration={"hnsw": {"space": "cosine"}},
+            )
+        except Exception:
+            # Collection exists with configuration already persisted
+            self._collection = self._client.get_collection(name="chunks")
 
     def upsert(
         self,
@@ -28,7 +35,13 @@ class VectorStore:
         metadatas: list[dict],
     ) -> None:
         """Upsert embeddings with metadata into the ChromaDB collection."""
-        raise NotImplementedError
+        ids = [str(cid) for cid in chunk_ids]
+        self._collection.upsert(
+            ids=ids,
+            embeddings=embeddings,
+            documents=documents,
+            metadatas=metadatas,
+        )
 
     def query(
         self,
@@ -38,9 +51,26 @@ class VectorStore:
         """Query for the top-N most similar chunks.
 
         Returns list of dicts with keys: chunk_id, text, metadata, distance.
+        Applies min(n_results, count) guard to prevent NotEnoughElementsException.
         """
-        raise NotImplementedError
+        actual_n = min(n_results, self._collection.count())
+        if actual_n == 0:
+            return []
+        results = self._collection.query(
+            query_embeddings=[query_embedding],
+            n_results=actual_n,
+            include=["documents", "metadatas", "distances"],
+        )
+        return [
+            {
+                "chunk_id": results["ids"][0][i],
+                "text": results["documents"][0][i],
+                "metadata": results["metadatas"][0][i],
+                "distance": results["distances"][0][i],
+            }
+            for i in range(len(results["ids"][0]))
+        ]
 
     def count(self) -> int:
         """Return total number of embeddings stored."""
-        raise NotImplementedError
+        return self._collection.count()

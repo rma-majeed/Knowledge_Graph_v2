@@ -10,6 +10,23 @@ def pytest_configure(config):
         "markers", "integration: marks tests that require external services (e.g. LM Studio)"
     )
 
+
+@pytest.fixture(autouse=True)
+def reset_chromadb_state():
+    """Reset ChromaDB EphemeralClient in-process state before each test.
+
+    ChromaDB's EphemeralClient shares module-level in-memory state across
+    instances in the same process. Without this reset, tests that use
+    EphemeralClient with the same collection name bleed data into each other.
+    Uses SharedSystemClient.clear_system_cache() to flush the shared singleton.
+    """
+    try:
+        from chromadb.api.shared_system_client import SharedSystemClient
+        SharedSystemClient.clear_system_cache()
+    except Exception:
+        pass  # ChromaDB not installed or API changed — no-op
+    yield
+
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
