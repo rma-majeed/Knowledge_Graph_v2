@@ -10,7 +10,7 @@
 ## Phases
 
 - [x] **Phase 1: Document Ingestion Foundation** - Extract text from PDF and PPTX files into a chunk store
-- [ ] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval
+- [x] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval (completed 2026-03-30)
 - [ ] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph
 - [ ] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions
 - [ ] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system
@@ -59,13 +59,13 @@ Plans:
 4. VRAM peak during embedding generation stays below 3.5GB (50% safety margin from 4GB ceiling)
 5. Retrieval precision on 20 test queries exceeds 80% (correct documents ranked at top)
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 02-01-test-infrastructure-PLAN.md — chromadb install, src/embed/ stubs, 12 xfail test stubs (Wave 1)
-- [ ] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
+- [x] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
 - [x] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
-- [ ] 02-04-embedding-pipeline-PLAN.md — embed_all_chunks() pipeline + embed CLI subcommand (Wave 3)
+- [x] 02-04-embedding-pipeline-PLAN.md — embed_all_chunks() pipeline + embed CLI subcommand (Wave 3)
 
 ### Phase 3: Knowledge Graph Construction
 
@@ -127,7 +127,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
-| 2. Embedding & Vector Search | 0/4 | Planned | - |
+| 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 0/4 | Not started | - |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
