@@ -137,6 +137,61 @@ def cmd_embed(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_graph(args: argparse.Namespace) -> int:
+    """Run the knowledge graph construction pipeline on embedded chunks."""
+    import kuzu
+    from src.embed.pipeline import check_lm_studio
+    from src.graph.pipeline import build_knowledge_graph
+
+    db_path = Path(args.db)
+    graph_path = Path(args.graph)
+    state_path = Path(args.state)
+
+    if not db_path.exists():
+        print(f"Error: Database not found: {db_path}", file=sys.stderr)
+        return 1
+
+    # Health check LM Studio before starting (LLM required for extraction)
+    if not check_lm_studio():
+        print(
+            "Error: LM Studio is not running or not reachable at localhost:1234.\n"
+            "Start LM Studio, load the LLM model (Qwen2.5-7B-Instruct), and retry.",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Ensure KuzuDB directory exists
+    graph_path.mkdir(parents=True, exist_ok=True)
+
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    db = kuzu.Database(str(graph_path))
+
+    try:
+        start = time.perf_counter()
+        result = build_knowledge_graph(
+            conn=conn,
+            db=db,
+            model=args.model,
+            state_path=str(state_path),
+        )
+        elapsed = time.perf_counter() - start
+        print(
+            f"\nKnowledge graph complete in {elapsed:.2f}s\n"
+            f"  Chunks processed: {result['chunks_processed']}\n"
+            f"  Entities extracted: {result['entities_extracted']}\n"
+            f"  LLM batches: {result['batches']}\n"
+            f"  Graph explosion alert: {'YES (see stderr)' if result['alert'] else 'No'}\n"
+            f"  KuzuDB: {graph_path}\n"
+            f"  State: {state_path}"
+        )
+    finally:
+        conn.close()
+
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="graphrag",
@@ -172,6 +227,24 @@ def main() -> int:
         help="LM Studio embedding model name (default: nomic-embed-text-v1.5)"
     )
     p_embed.set_defaults(func=cmd_embed)
+
+    # graph subcommand
+    p_graph = subparsers.add_parser("graph", help="Build knowledge graph from embedded chunks")
+    p_graph.add_argument(
+        "--db", default="data/chunks.db", help="SQLite database path (default: data/chunks.db)"
+    )
+    p_graph.add_argument(
+        "--graph", default="data/kuzu_db", help="KuzuDB directory path (default: data/kuzu_db)"
+    )
+    p_graph.add_argument(
+        "--model", default="Qwen2.5-7B-Instruct",
+        help="LM Studio LLM model name (default: Qwen2.5-7B-Instruct)"
+    )
+    p_graph.add_argument(
+        "--state", default="data/extraction_state.json",
+        help="Extraction checkpoint file (default: data/extraction_state.json)"
+    )
+    p_graph.set_defaults(func=cmd_graph)
 
     args = parser.parse_args()
     return args.func(args)
