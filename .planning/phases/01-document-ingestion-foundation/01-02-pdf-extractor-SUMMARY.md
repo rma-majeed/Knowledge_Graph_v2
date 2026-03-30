@@ -102,6 +102,15 @@ None - no external service configuration required.
 - PPTX extractor (Plan 01-03) is the next dependency to implement
 - The `src/ingest/` package structure is in place for subsequent modules
 
+## Self-Check: PASSED
+
+- FOUND: src/__init__.py
+- FOUND: src/ingest/__init__.py
+- FOUND: src/ingest/pdf_extractor.py
+- FOUND: .planning/phases/01-document-ingestion-foundation/01-02-pdf-extractor-SUMMARY.md
+- COMMIT FOUND: e164dd3 (feat(01-02): implement PDF extractor using PyMuPDF)
+- All 3 PDF tests PASSED, 15 PPTX/other tests xfailed (no failures, no errors)
+
 ---
 *Phase: 01-document-ingestion-foundation*
 *Completed: 2026-03-28*

@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 2
-current_plan: Not started
+current_phase: 02
+current_plan: 1
 status: unknown
-stopped_at: Completed 02-01-test-infrastructure-PLAN.md
-last_updated: "2026-03-30T05:09:49.536Z"
+stopped_at: Completed 01-06-ingestion-pipeline-PLAN.md
+last_updated: "2026-03-30T04:55:38.575Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 4
-  completed_plans: 7
+  completed_phases: 1
+  total_plans: 10
+  completed_plans: 6
   percent: 100
 ---
 
@@ -20,7 +20,7 @@ progress:
 
 **Project:** Automotive Consulting GraphRAG Agent (Local GraphRAG for automotive consulting document intelligence)
 **Created:** 2026-03-28
-**Current Phase:** 2
+**Current Phase:** 02
 
 ---
 
@@ -46,17 +46,16 @@ progress:
 
 ## Current Position
 
-Phase: 02 (embedding-vector-search) — IN PROGRESS
-Plan: 1 of 4 (02-01-test-infrastructure complete)
-**Current Phase:** 02-embedding-vector-search
-**Current Plan:** 02-02 (next)
-**Progress:** [██████████] 100% (Phase 1 complete; Phase 2 Plan 1 done)
+Phase: 02 (embedding-vector-search) — EXECUTING
+Plan: 1 of 4
+**Milestone:** Phase 1 Complete
+**Current Phase:** 01-document-ingestion-foundation
+**Current Plan:** 1
+**Progress:** [██████████] 100% (Phase 1)
 
 **Next Steps:**
 
-1. Execute Phase 2 Plan 02: embedding implementation (embed_chunks, embed_query)
-2. Execute Phase 2 Plan 03: VectorStore implementation
-3. Execute Phase 2 Plan 04: embed pipeline (embed_all_chunks)
+1. Begin Phase 2: Embedding (LM Studio nomic-embed-text-1.5 -> ChromaDB)
 
 ---
 
@@ -119,8 +118,6 @@ All phases depend on LM Studio being available and functional.
 | SQLite for chunks + metadata | Zero external process, native Python support, proven for this scale | Locked |
 | Streamlit for UI | Best ease-of-use for non-technical consultants; rapid iteration | Locked |
 | xfail(strict=False) stubs for TDD wave-0 | Keeps test intent visible and stubs automatically pass once implementation lands | 01-01 |
-| chromadb EphemeralClient in unit tests | Avoids filesystem side effects; tests are self-contained and fast | 02-01 |
-| integration mark registered in conftest.py | Suppresses PytestUnknownMarkWarning; keeps test output clean for all phases | 02-01 |
 | extract_pdf() try/finally with doc.close() | Prevents fitz file handle leaks on all code paths including exceptions | 01-02 |
 | Table cell text appended after plain text | Simpler than interleaving — avoids position tracking complexity | 01-02 |
 | tiktoken cl100k_base encoder singleton | Caches vocab after first load (~100ms) to avoid reload per call during batch indexing of 500+ docs | 01-05 |
@@ -165,16 +162,21 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-30
-**Stopped At:** Completed 02-01-test-infrastructure-PLAN.md
-**Files Written:** src/embed/__init__.py (created), src/embed/embedder.py (created), src/embed/vector_store.py (created), data/chroma_db/.gitkeep (created), .gitignore (created), tests/test_embedding.py (created), tests/conftest.py (modified), requirements.txt (modified)
-**Git Status:** Clean (task commits 3acb895, 9c5f4b4 made)
+**Stopped At:** Completed 01-06-ingestion-pipeline-PLAN.md
+**Files Written:** src/ingest/pipeline.py (created), src/main.py (created), tests/test_ingest_e2e.py (xfail removed from 4 tests)
+**Git Status:** Clean (task commits 17a0562, ce23ded made)
 
-**Phase 2 Plan 01 Complete — TDD Contract Established:**
+**Phase 1 Complete — Ready for Phase 2:**
 
-chromadb 1.5.5 installed. src/embed/ package stubs created. 12 xfail Wave-0 test stubs in tests/test_embedding.py. pytest exits 0.
+All Phase 1 components implemented and tested (18 tests, 0 failures):
 
-Ready for Plan 02: implement embed_chunks and embed_query.
+- PDF extraction (extract_pdf)
+- PPTX extraction (extract_pptx)
+- Text chunking with tiktoken cl100k_base (chunk_text)
+- SQLite chunk store with SHA-256 deduplication (ChunkStore)
+- End-to-end pipeline (ingest_document, ingest_directory)
+- CLI entry point (python src/main.py ingest)
 
 ---
 
-**Plan 02-01 complete. chromadb installed. 12 xfail stubs. pytest tests/test_embedding.py -m "not integration" exits 0 (10 xfailed, 1 xpassed).**
+**Plan 01-06 complete. Phase 1 DONE. All 18 tests pass. CLI verified: Documents ingested: 2, Total chunks stored: 5 for fixtures/.**

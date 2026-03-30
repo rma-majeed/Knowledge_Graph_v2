@@ -3,7 +3,7 @@
 **Project:** Automotive Consulting GraphRAG Agent
 **Created:** 2026-03-28
 **Granularity:** Standard (5-8 phases)
-**Status:** Phase 1 complete — ready for Phase 2
+**Status:** Phase 1 complete — Phase 2 planned
 
 ---
 
@@ -59,9 +59,13 @@ Plans:
 4. VRAM peak during embedding generation stays below 3.5GB (50% safety margin from 4GB ceiling)
 5. Retrieval precision on 20 test queries exceeds 80% (correct documents ranked at top)
 
-**Plans:** 1/4 plans executed
+**Plans:** 4 plans
 
-**UI hint:** yes
+Plans:
+- [ ] 02-01-test-infrastructure-PLAN.md — chromadb install, src/embed/ stubs, 12 xfail test stubs (Wave 1)
+- [ ] 02-02-embedder-PLAN.md — embed_chunks() and embed_query() via LM Studio OpenAI API (Wave 2, parallel with Plan 03)
+- [ ] 02-03-vector-store-PLAN.md — VectorStore class wrapping ChromaDB with cosine similarity, upsert, query (Wave 2, parallel with Plan 02)
+- [ ] 02-04-embedding-pipeline-PLAN.md — embed_all_chunks() pipeline + embed CLI subcommand (Wave 3)
 
 ### Phase 3: Knowledge Graph Construction
 
@@ -122,8 +126,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Document Ingestion Foundation | 0/6 | Planned | - |
-| 2. Embedding & Vector Search | 1/4 | In Progress|  |
+| 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
+| 2. Embedding & Vector Search | 0/4 | Planned | - |
 | 3. Knowledge Graph Construction | 0/4 | Not started | - |
 | 4. Query Engine & Answer Generation | 0/4 | Not started | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
@@ -144,4 +148,4 @@ Plans:
 | Query (QUERY) | 5 | Phase 4 |
 | Chat UI (UI) | 2 | Phase 5 |
 
-**Status:** All requirements mapped. Coverage = 100%. Phase 1 plans created — ready for execution.
+**Status:** All requirements mapped. Coverage = 100%. Phase 2 plans created — ready for execution.
