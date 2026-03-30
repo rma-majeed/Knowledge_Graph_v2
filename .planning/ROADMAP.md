@@ -86,8 +86,8 @@ Plans:
 
 Plans:
 - [x] 03-01-test-infrastructure-PLAN.md — kuzu/rapidfuzz install, src/graph/ stubs, 23 xfail stubs across 4 test files (Wave 1)
-- [x] 03-02-extractor-PLAN.md — extract_entities_relationships() via LM Studio LLM with entity type whitelist + confidence filter (Wave 2, parallel with Plan 03)
-- [ ] 03-03-dedup-and-db-PLAN.md — normalize_entity_name(), deduplicate_entities() with RapidFuzz; KuzuDB schema + upsert + query (Wave 2, parallel with Plan 02)
+- [ ] 03-02-extractor-PLAN.md — extract_entities_relationships() via LM Studio LLM with entity type whitelist + confidence filter (Wave 2, parallel with Plan 03)
+- [x] 03-03-dedup-and-db-PLAN.md — normalize_entity_name(), deduplicate_entities() with RapidFuzz; KuzuDB schema + upsert + query (Wave 2, parallel with Plan 02)
 - [ ] 03-04-citations-and-monitor-PLAN.md — CitationStore SQLite bridge table; check_entity_density() graph explosion guard (Wave 3)
 - [ ] 03-05-pipeline-and-cli-PLAN.md — build_knowledge_graph() pipeline wiring + graph CLI subcommand (Wave 4)
 

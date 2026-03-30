@@ -101,8 +101,9 @@ def test_upsert_entity_no_duplicate(tmp_path) -> None:
     upsert_entity(db, entity)  # Second upsert must not raise or duplicate
 
     conn = kuzu.Connection(db)
-    result = conn.execute("MATCH (n:OEM {canonical_name: 'Tesla'}) RETURN COUNT(n) AS cnt").fetchall()
-    assert result[0]["cnt"] == 1
+    # kuzu 0.11+ uses get_all() returning list of lists, not fetchall() returning list of dicts
+    result = conn.execute("MATCH (n:OEM {canonical_name: 'Tesla'}) RETURN COUNT(n) AS cnt").get_all()
+    assert result[0][0] == 1
 
 
 @pytest.mark.xfail(strict=False, reason="not implemented yet")
