@@ -19,7 +19,7 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
-- [ ] Local embedding model served via LM Studio OpenAI-compatible API
+- [x] Local embedding model served via LM Studio OpenAI-compatible API — *Validated in Phase 2: Embedding & Vector Search*
 - [ ] Knowledge graph captures named entities, relationships, and document communities across the corpus
 - [ ] Natural language query returns synthesized answer with source document references
 - [ ] Web chat UI accessible from a browser for consultant use
@@ -80,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after Phase 1 completion — document ingestion pipeline built and verified*
+*Last updated: 2026-03-30 after Phase 2 completion — embedding pipeline built: LM Studio embedder, ChromaDB VectorStore, SQLite→embed→ChromaDB incremental pipeline, `embed` CLI subcommand*
