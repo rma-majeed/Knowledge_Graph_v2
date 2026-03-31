@@ -112,7 +112,7 @@ Plans:
 - [x] 04-01-test-infrastructure-PLAN.md — src/query/ stubs, 11 xfail test stubs across 3 test files (Wave 1)
 - [x] 04-02-hybrid-retriever-PLAN.md — vector_search() + graph_expand() + hybrid_retrieve() (Wave 2, parallel with Plan 03)
 - [x] 04-03-assembler-and-citations-PLAN.md — truncate_to_budget() + build_citations() HIGH/LOW + format_answer() (Wave 2, parallel with Plan 02)
-- [ ] 04-04-pipeline-and-cli-PLAN.md — answer_question() pipeline wiring + query CLI subcommand (Wave 3)
+- [x] 04-04-pipeline-and-cli-PLAN.md — answer_question() pipeline wiring + query CLI subcommand (Wave 3)
 
 ### Phase 5: Chat UI & Session Management
 
@@ -147,7 +147,7 @@ Plans:
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
-| 4. Query Engine & Answer Generation | 3/4 | Complete    | 2026-03-31 |
+| 4. Query Engine & Answer Generation | 4/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
 
 ---
