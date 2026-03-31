@@ -21,10 +21,10 @@ A consultant types a question and gets a cited, synthesized answer drawn from 15
 - [ ] Indexing pipeline handles 500–2000 documents without excessive runtime (target: < 1 min/doc average)
 - [x] Local embedding model served via LM Studio OpenAI-compatible API — *Validated in Phase 2: Embedding & Vector Search*
 - [x] Knowledge graph captures named entities, relationships, and document communities across the corpus — *Validated in Phase 3: Knowledge Graph Construction*
-- [ ] Natural language query returns synthesized answer with source document references
+- [x] Natural language query returns synthesized answer with source document references — *Validated in Phase 4: Query Engine & Answer Generation*
 - [ ] Web chat UI accessible from a browser for consultant use
 - [ ] Full pipeline runs on 32GB RAM + 4GB VRAM without crashing or swapping
-- [ ] Local LLM for answer generation served via LM Studio (no external APIs required)
+- [x] Local LLM for answer generation served via LM Studio (no external APIs required) — *Validated in Phase 4: Query Engine & Answer Generation*
 - [ ] Table and diagram content flagged for manual verification in query output
 
 ### Out of Scope
@@ -80,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 3 completion — knowledge graph pipeline built: LM Studio LLM extractor, RapidFuzz deduplicator, KuzuDB graph storage, SQLite citation bridge, graph explosion monitor, `graph` CLI subcommand*
+*Last updated: 2026-03-31 after Phase 4 completion — query engine built: hybrid retriever (ChromaDB vector + KuzuDB 1-hop graph expansion), token-budgeted context assembler, HIGH/LOW citation confidence, LM Studio answer synthesis, `query` CLI subcommand*
