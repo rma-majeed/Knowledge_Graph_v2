@@ -34,8 +34,8 @@
 
 ### Chat UI
 
-- [ ] **UI-01**: User can interact with the system via a browser-based Streamlit chat interface
-- [ ] **UI-02**: Chat history is maintained within a session (user sees previous Q&A pairs)
+- [x] **UI-01**: User can interact with the system via a browser-based Streamlit chat interface
+- [x] **UI-02**: Chat history is maintained within a session (user sees previous Q&A pairs)
 
 ## v2 Requirements
 
@@ -90,5 +90,5 @@
 | QUERY-03 | Phase 4 | Complete |
 | QUERY-04 | Phase 4 | Complete |
 | QUERY-05 | Phase 4 | Complete |
-| UI-01 | Phase 5 | Pending |
-| UI-02 | Phase 5 | Pending |
+| UI-01 | Phase 5 | Complete |
+| UI-02 | Phase 5 | Complete |
