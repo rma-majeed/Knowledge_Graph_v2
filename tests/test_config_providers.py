@@ -19,7 +19,6 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_client_defaults_to_lmstudio(mock_env_lmstudio):
     """get_llm_client() returns an OpenAI client pointing to localhost:1234 when LLM_PROVIDER is unset."""
     from src.config.providers import get_llm_client
@@ -28,8 +27,8 @@ def test_llm_client_defaults_to_lmstudio(mock_env_lmstudio):
 
     # Should be the raw OpenAI client with LM Studio base URL
     assert hasattr(client, "chat"), "Client must have .chat attribute (OpenAI-compatible)"
-    # Base URL must point to localhost:1234
-    base = getattr(getattr(client, "base_url", None), "host", None) or str(client.base_url)
+    # Base URL must point to localhost:1234 — use str() to get full URL including port
+    base = str(client.base_url)
     assert "1234" in base, f"Expected localhost:1234 base URL, got: {base}"
 
 
@@ -38,7 +37,6 @@ def test_llm_client_defaults_to_lmstudio(mock_env_lmstudio):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_client_from_env_openai(mock_env_openai):
     """get_llm_client() returns a LiteLLM-compatible config for OpenAI provider."""
     from src.config.providers import get_llm_client, load_provider_config
@@ -52,7 +50,6 @@ def test_llm_client_from_env_openai(mock_env_openai):
     assert client is not None
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_client_from_env_ollama(mock_env_ollama):
     """get_llm_client() returns a LiteLLM-compatible config for Ollama (no API key required)."""
     from src.config.providers import get_llm_client, load_provider_config
@@ -65,7 +62,6 @@ def test_llm_client_from_env_ollama(mock_env_ollama):
     assert client is not None
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_client_from_env_gemini(mock_env_gemini):
     """get_llm_client() returns a LiteLLM-compatible config for Gemini."""
     from src.config.providers import get_llm_client, load_provider_config
@@ -78,7 +74,6 @@ def test_llm_client_from_env_gemini(mock_env_gemini):
     assert client is not None
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_client_from_env_anthropic(mock_env_anthropic):
     """get_llm_client() returns a LiteLLM-compatible config for Anthropic."""
     from src.config.providers import get_llm_client, load_provider_config
@@ -96,7 +91,6 @@ def test_llm_client_from_env_anthropic(mock_env_anthropic):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_embed_client_defaults_to_lmstudio(mock_env_lmstudio):
     """get_embed_client() returns an OpenAI client pointing to localhost:1234 when EMBED_PROVIDER unset."""
     from src.config.providers import get_embed_client
@@ -104,7 +98,8 @@ def test_embed_client_defaults_to_lmstudio(mock_env_lmstudio):
     client = get_embed_client()
 
     assert hasattr(client, "embeddings"), "Client must have .embeddings attribute (OpenAI-compatible)"
-    base = getattr(getattr(client, "base_url", None), "host", None) or str(client.base_url)
+    # Use str() to get full URL including port number
+    base = str(client.base_url)
     assert "1234" in base, f"Expected localhost:1234 base URL, got: {base}"
 
 
@@ -113,7 +108,6 @@ def test_embed_client_defaults_to_lmstudio(mock_env_lmstudio):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_embed_client_from_env_openai(mock_env_openai):
     """get_embed_client() returns a LiteLLM-compatible config for OpenAI embeddings."""
     from src.config.providers import get_embed_client, load_provider_config
@@ -131,7 +125,6 @@ def test_embed_client_from_env_openai(mock_env_openai):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="not implemented yet")
 def test_llm_provider_change_requires_only_env(monkeypatch):
     """Changing LLM_PROVIDER in env returns different client type without any code change."""
     from src.config.providers import get_llm_client

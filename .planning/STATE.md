@@ -6,6 +6,9 @@ current_phase: 06
 status: unknown
 stopped_at: "Completed 06-03: mismatch detection in embed pipeline"
 last_updated: "2026-03-31T10:41:54.285Z"
+status: executing
+stopped_at: Plan 06-02 complete — provider factory module (providers.py, .env.example, requirements.txt)
+last_updated: "2026-03-31T10:46:14.484Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 6
@@ -124,6 +127,8 @@ All phases depend on LM Studio being available and functional.
 | imports inside test functions (not at module level) | Allows collection of provider tests before src.config.providers exists; same xfail pattern as 01-01 | 06-01 |
 | Mismatch check placed after pending_count==0 guard | Avoids querying metadata on empty DBs; matches test_embed_loop_incremental behavior spec | 06-03 |
 | try/except around metadata SELECT/INSERT | Backward compat with databases created before this schema version — embed run does not fail on older schemas | 06-03 |
+| _LiteLLMConfig is a config holder not a client | Avoids importing litellm at startup; callers check hasattr(client, 'provider') to route between OpenAI and LiteLLM | 06-02 |
+| get_*_client() reads os.getenv() on every call | No module-level cache so pytest monkeypatch works correctly in tests | 06-02 |
 
 ---
 
@@ -174,3 +179,19 @@ Embedding mismatch detection implemented (PROVIDER-06):
 - src/embed/pipeline.py — mismatch detection + metadata persistence in embed_all_chunks()
 
 test_embed_mismatch_warning_triggers: XPASS. All embedding tests: 13 xpassed.
+**Stopped At:** Plan 06-02 complete — provider factory module (providers.py, .env.example, requirements.txt)
+**Files Written:** src/config/providers.py (41b46a2), .env.example (92610e6), requirements.txt (92610e6), tests/test_config_providers.py (41b46a2), .gitignore (92610e6)
+**Git Status:** Clean
+
+**Plan 06-02 Complete — Ready for 06-03:**
+
+Provider factory module implemented (8 tests PASSED, 1 xfailed):
+
+- src/config/providers.py — get_llm_client(), get_embed_client(), load_provider_config(), get_current_embed_provider(), get_current_embed_model()
+- .env.example — provider configuration template with 5 LLM + 4 embed examples
+- requirements.txt — litellm>=1.45.0, python-dotenv>=1.0.0, streamlit>=1.30.0 added
+- .gitignore — .env added to prevent API key commits
+
+---
+
+**Plan 06-02 complete. 8 tests PASSED, 1 xfailed (PROVIDER-06 mismatch detection — planned for 06-03). No regressions.**
