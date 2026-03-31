@@ -202,6 +202,13 @@ def answer_question(
     graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
     chunks = deduplicate_chunks(vector_chunks + graph_chunks)
 
+    # Step 4b: Cross-encoder reranking (RAG-02) — after graph expand, before budget truncation
+    from src.config.retrieval_config import RAG_ENABLE_RERANKER
+    if RAG_ENABLE_RERANKER and chunks:
+        from src.query.reranker import Reranker
+        reranker = Reranker()
+        chunks = reranker.rerank(retrieval_query, chunks)
+
     # Step 5: Assemble context within token budget
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
 
@@ -280,6 +287,13 @@ def stream_answer_question(
     # Graph expand on merged vector results
     graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
     chunks = deduplicate_chunks(vector_chunks + graph_chunks)
+
+    # Step 4b: Cross-encoder reranking (RAG-02) — after graph expand, before budget truncation
+    from src.config.retrieval_config import RAG_ENABLE_RERANKER
+    if RAG_ENABLE_RERANKER and chunks:
+        from src.query.reranker import Reranker
+        reranker = Reranker()
+        chunks = reranker.rerank(retrieval_query, chunks)
 
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
     citations = build_citations(included_chunks)
