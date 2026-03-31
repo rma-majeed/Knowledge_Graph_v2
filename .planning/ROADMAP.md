@@ -154,12 +154,12 @@ Plans:
 4. Switching embedding provider warns user that a full re-embed is required; the warning is surfaced at CLI and UI level before proceeding
 5. All pipeline tests pass for the default LM Studio config; provider switching is covered by unit tests with mocked LiteLLM calls
 
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 06-01-PLAN.md — test stubs: test_config_providers.py (9 xfail), conftest fixtures, src/config/__init__.py (Wave 1)
 - [ ] 06-02-PLAN.md — src/config/providers.py factory functions, .env.example, requirements.txt update (Wave 2, parallel with Plan 03)
-- [ ] 06-03-PLAN.md — metadata table schema, embed mismatch detection in embed_all_chunks() (Wave 2, parallel with Plan 02)
+- [x] 06-03-PLAN.md — metadata table schema, embed mismatch detection in embed_all_chunks() (Wave 2, parallel with Plan 02)
 - [ ] 06-04-PLAN.md — call site refactoring: graph/pipeline.py, query/pipeline.py, app.py (Wave 3)
 
 ---
@@ -173,7 +173,7 @@ Plans:
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
 | 4. Query Engine & Answer Generation | 4/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
-| 6. Multi-Provider LLM & Embedding Configuration | 1/4 | Executing | — |
+| 6. Multi-Provider LLM & Embedding Configuration | 2/4 | In Progress|  |
 
 ---
 

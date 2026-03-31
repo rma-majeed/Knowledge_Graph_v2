@@ -3,17 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 06
-current_plan: 2
-status: executing
-stopped_at: Plan 06-01 complete — test infrastructure for Phase 6 multi-provider config
-last_updated: "2026-03-31T00:00:00Z"
+status: unknown
+stopped_at: "Completed 06-03: mismatch detection in embed pipeline"
+last_updated: "2026-03-31T10:41:54.285Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 26
-  completed_plans: 23
-  percent: 88
+  completed_plans: 24
+  percent: 92
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -47,14 +46,12 @@ progress:
 ## Current Position
 
 Phase: 06 (multi-provider-llm-embedding-configuration) — EXECUTING
-Plan: 2 of 4
-**Progress:** [█████████░] 88%
+Plan: 3 of 4
+**Progress:** [█████████░] 92%
 
 **Next Steps:**
 
-1. Execute 06-02: Implement src/config/providers.py (get_llm_client, get_embed_client, load_provider_config)
-2. Execute 06-03: Mismatch detection in embed pipeline
-3. Execute 06-04: Wire providers into all pipelines
+1. Execute 06-04: Wire providers (get_llm_client / get_embed_client) into all pipelines
 
 ---
 
@@ -125,6 +122,8 @@ All phases depend on LM Studio being available and functional.
 | ingest_document() opens/closes its own SQLite connection | Connection-per-call isolation prevents state leaks between files in batch ingestion | 01-06 |
 | PPTX slide_num normalized to page_num in pipeline layer | Uniform DB schema — downstream queries use page_num regardless of source doc type | 01-06 |
 | imports inside test functions (not at module level) | Allows collection of provider tests before src.config.providers exists; same xfail pattern as 01-01 | 06-01 |
+| Mismatch check placed after pending_count==0 guard | Avoids querying metadata on empty DBs; matches test_embed_loop_incremental behavior spec | 06-03 |
+| try/except around metadata SELECT/INSERT | Backward compat with databases created before this schema version — embed run does not fail on older schemas | 06-03 |
 
 ---
 
@@ -162,18 +161,16 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-31
-**Stopped At:** Plan 06-01 complete — test infrastructure for Phase 6 multi-provider config
-**Files Written:** src/config/__init__.py (f32e488), tests/conftest.py (8fcb533), tests/test_config_providers.py (550b4d1)
+**Stopped At:** Completed 06-03: mismatch detection in embed pipeline
+**Files Written:** src/db/schema.sql (562c45f), src/ingest/store.py (562c45f), src/embed/pipeline.py (191fce0)
 **Git Status:** Clean
 
-**Plan 06-01 Complete — Ready for 06-02:**
+**Plan 06-03 Complete — Ready for 06-04:**
 
-Phase 6 test infrastructure established (9 xfail stubs, 0 failures):
+Embedding mismatch detection implemented (PROVIDER-06):
 
-- src/config/__init__.py — package marker for provider config module
-- tests/conftest.py — 5 new provider env fixtures appended
-- tests/test_config_providers.py — 9 xfail stubs covering PROVIDER-01 through PROVIDER-06
+- src/db/schema.sql — metadata table DDL appended
+- src/ingest/store.py — _INLINE_SCHEMA synced with metadata table
+- src/embed/pipeline.py — mismatch detection + metadata persistence in embed_all_chunks()
 
----
-
-**Plan 06-01 complete. 9 tests collected, 9 xfailed. No collection errors. No regressions.**
+test_embed_mismatch_warning_triggers: XPASS. All embedding tests: 13 xpassed.

@@ -37,6 +37,15 @@
 - [x] **UI-01**: User can interact with the system via a browser-based Streamlit chat interface
 - [x] **UI-02**: Chat history is maintained within a session (user sees previous Q&A pairs)
 
+### Multi-Provider LLM & Embedding Configuration
+
+- [ ] **PROVIDER-01**: System reads LLM provider, model, and API key from `.env` file; defaults to LM Studio if `.env` absent or keys unset
+- [ ] **PROVIDER-02**: System supports LM Studio, Ollama, Gemini, OpenAI, and Anthropic as LLM providers via LiteLLM adapter
+- [ ] **PROVIDER-03**: System reads embedding provider, model, and API key from `.env` file; defaults to LM Studio if `.env` absent or keys unset
+- [ ] **PROVIDER-04**: System supports LM Studio, Ollama, Gemini, and OpenAI as embedding providers via LiteLLM adapter
+- [ ] **PROVIDER-05**: Changing LLM provider requires no code changes — only `.env` update
+- [x] **PROVIDER-06**: Embedding provider switch warns user that re-running the embed step is required; existing corpus built with a different model is not silently re-used
+
 ## v2 Requirements
 
 ### Ingestion
@@ -92,3 +101,9 @@
 | QUERY-05 | Phase 4 | Complete |
 | UI-01 | Phase 5 | Complete |
 | UI-02 | Phase 5 | Complete |
+| PROVIDER-01 | Phase 6 | Planned |
+| PROVIDER-02 | Phase 6 | Planned |
+| PROVIDER-03 | Phase 6 | Planned |
+| PROVIDER-04 | Phase 6 | Planned |
+| PROVIDER-05 | Phase 6 | Planned |
+| PROVIDER-06 | Phase 6 | Planned |
