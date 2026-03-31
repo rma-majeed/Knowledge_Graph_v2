@@ -103,6 +103,19 @@ class ChunkStore:
             sql = _INLINE_SCHEMA
         self.conn.executescript(sql)
         self.conn.commit()
+        # Phase 7: backward-compatible schema additions
+        self.add_enriched_text_column()
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS chunk_parents ("
+            "    child_chunk_id  INTEGER PRIMARY KEY,"
+            "    parent_chunk_id INTEGER NOT NULL,"
+            "    parent_text     TEXT NOT NULL,"
+            "    parent_token_count INTEGER,"
+            "    FOREIGN KEY (child_chunk_id)  REFERENCES chunks(chunk_id),"
+            "    FOREIGN KEY (parent_chunk_id) REFERENCES chunks(chunk_id)"
+            ")"
+        )
+        self.conn.commit()
 
     def is_document_indexed(self, filepath: Union[str, Path]) -> bool:
         """Return True if a document with the same SHA-256 hash is already in documents table.
@@ -201,6 +214,95 @@ class ChunkStore:
         )
         self.conn.commit()
 
+    # ------------------------------------------------------------------
+    # Phase 7: RAG-03 contextual enrichment
+    # ------------------------------------------------------------------
+
+    def add_enriched_text_column(self) -> None:
+        """Add enriched_text TEXT column to chunks table if it does not exist.
+
+        Idempotent — safe to call on both new and existing databases.
+        """
+        try:
+            self.conn.execute("ALTER TABLE chunks ADD COLUMN enriched_text TEXT")
+            self.conn.commit()
+        except Exception:
+            pass  # Column already exists
+
+    def upsert_chunk_enrichment(self, chunk_id: int, enriched_text: str) -> None:
+        """Store LLM-generated enriched_text for a single chunk.
+
+        Args:
+            chunk_id: SQLite chunk_id INTEGER.
+            enriched_text: 2-3 sentence context summary from enrich_chunk_context().
+        """
+        self.conn.execute(
+            "UPDATE chunks SET enriched_text = ? WHERE chunk_id = ?",
+            (enriched_text, chunk_id),
+        )
+        self.conn.commit()
+
+    # ------------------------------------------------------------------
+    # Phase 7: RAG-04 parent-document retrieval
+    # ------------------------------------------------------------------
+
+    def insert_chunk_parents(self, doc_id: int, chunk_rows: list[dict]) -> None:
+        """Insert identity-mapping rows into chunk_parents for a newly ingested document.
+
+        v1: each chunk is its own parent (child_chunk_id == parent_chunk_id).
+        chunk_rows must have keys: chunk_id (int), text (str), token_count (int).
+
+        Args:
+            doc_id: Unused in v1 but kept for future parent-building logic.
+            chunk_rows: List of dicts from insert_chunks() augmented with chunk_id.
+        """
+        rows = [
+            (
+                int(r["chunk_id"]),
+                int(r["chunk_id"]),
+                r.get("text", ""),
+                r.get("token_count", 0),
+            )
+            for r in chunk_rows
+            if r.get("chunk_id") is not None
+        ]
+        if rows:
+            self.conn.executemany(
+                "INSERT OR IGNORE INTO chunk_parents "
+                "(child_chunk_id, parent_chunk_id, parent_text, parent_token_count) "
+                "VALUES (?, ?, ?, ?)",
+                rows,
+            )
+            self.conn.commit()
+
+    def get_parent_texts(self, chunk_ids: list) -> dict:
+        """Fetch parent_text for each child_chunk_id from chunk_parents.
+
+        Returns {str(chunk_id): parent_text}. Missing ids absent from dict.
+        """
+        if not chunk_ids:
+            return {}
+        normalised = []
+        for cid in chunk_ids:
+            try:
+                normalised.append(int(cid))
+            except (ValueError, TypeError):
+                normalised.append(cid)
+        placeholders = ",".join("?" * len(normalised))
+        try:
+            rows = self.conn.execute(
+                f"SELECT child_chunk_id, parent_text FROM chunk_parents "
+                f"WHERE child_chunk_id IN ({placeholders})",
+                normalised,
+            ).fetchall()
+        except Exception:
+            return {}
+        if not rows:
+            return {}
+        if hasattr(rows[0], "keys"):
+            return {str(r["child_chunk_id"]): r["parent_text"] for r in rows}
+        return {str(r[0]): r[1] for r in rows}
+
     def get_chunks_with_metadata_for_embedding(
         self, batch_size: int = 8
     ) -> list[sqlite3.Row]:
@@ -270,5 +372,13 @@ CREATE INDEX IF NOT EXISTS idx_chunks_doc_page_index ON chunks(doc_id, page_num,
 CREATE TABLE IF NOT EXISTS metadata (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS chunk_parents (
+    child_chunk_id  INTEGER PRIMARY KEY,
+    parent_chunk_id INTEGER NOT NULL,
+    parent_text     TEXT NOT NULL,
+    parent_token_count INTEGER,
+    FOREIGN KEY (child_chunk_id)  REFERENCES chunks(chunk_id),
+    FOREIGN KEY (parent_chunk_id) REFERENCES chunks(chunk_id)
 );
 """

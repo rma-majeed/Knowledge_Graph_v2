@@ -38,3 +38,15 @@ CREATE TABLE IF NOT EXISTS metadata (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- Phase 7 RAG-04: parent-document retrieval table
+-- v1 identity mapping: child_chunk_id == parent_chunk_id.
+-- Future: insert smaller child chunks pointing to 512-token parents.
+CREATE TABLE IF NOT EXISTS chunk_parents (
+    child_chunk_id  INTEGER PRIMARY KEY,
+    parent_chunk_id INTEGER NOT NULL,
+    parent_text     TEXT NOT NULL,
+    parent_token_count INTEGER,
+    FOREIGN KEY (child_chunk_id)  REFERENCES chunks(chunk_id),
+    FOREIGN KEY (parent_chunk_id) REFERENCES chunks(chunk_id)
+);
