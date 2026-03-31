@@ -267,4 +267,8 @@ CREATE INDEX IF NOT EXISTS idx_chunks_doc_id ON chunks(doc_id);
 CREATE INDEX IF NOT EXISTS idx_chunks_page_num ON chunks(doc_id, page_num);
 CREATE INDEX IF NOT EXISTS idx_chunks_embedding_flag ON chunks(embedding_flag);
 CREATE INDEX IF NOT EXISTS idx_chunks_doc_page_index ON chunks(doc_id, page_num, chunk_index);
+CREATE TABLE IF NOT EXISTS metadata (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
