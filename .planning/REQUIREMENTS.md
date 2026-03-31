@@ -46,6 +46,14 @@
 - [x] **PROVIDER-05**: Changing LLM provider requires no code changes — only `.env` update
 - [x] **PROVIDER-06**: Embedding provider switch warns user that re-running the embed step is required; existing corpus built with a different model is not silently re-used
 
+### RAG Retrieval Quality
+
+- [ ] **RAG-01**: System performs BM25 keyword search in parallel with vector search and merges results using Reciprocal Rank Fusion (RRF) before passing to the LLM
+- [ ] **RAG-02**: System applies a BGE cross-encoder reranker to merged retrieval candidates, re-ordering by semantic relevance before context assembly
+- [ ] **RAG-03**: At ingest time, system enriches each chunk with a brief LLM-generated context summary prepended before embedding (contextual chunk enrichment)
+- [ ] **RAG-04**: At query time, when a small child chunk is retrieved, the system expands it to its larger parent passage for LLM context assembly (parent-document retrieval)
+- [ ] **RAG-05**: All retrieval quality improvements are configurable and additive — each can be enabled/disabled independently; existing pipeline and all prior tests remain functional
+
 ## v2 Requirements
 
 ### Ingestion

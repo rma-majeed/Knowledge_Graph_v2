@@ -3,7 +3,7 @@
 **Project:** Automotive Consulting GraphRAG Agent
 **Created:** 2026-03-28
 **Granularity:** Standard (5-8 phases)
-**Status:** Phase 5 complete — Phase 6 planned
+**Status:** Phase 6 complete — Phase 7 planned
 
 ---
 
@@ -15,6 +15,7 @@
 - [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
 - [x] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system (completed 2026-03-31)
 - [x] **Phase 6: Multi-Provider LLM & Embedding Configuration** - Make LLM and embedding providers configurable via .env file using LiteLLM adapter (LM Studio, Ollama, Gemini, OpenAI, Anthropic) (completed 2026-03-31)
+- [ ] **Phase 7: RAG Retrieval Quality Improvements** - Improve retrieval precision and recall through BM25 hybrid search with RRF fusion, BGE cross-encoder reranking, contextual chunk enrichment, and parent-document retrieval
 
 ---
 
@@ -162,6 +163,30 @@ Plans:
 - [x] 06-03-PLAN.md — metadata table schema, embed mismatch detection in embed_all_chunks() (Wave 2, parallel with Plan 02)
 - [x] 06-04-PLAN.md — call site refactoring: graph/pipeline.py, query/pipeline.py, app.py (Wave 3)
 
+### Phase 7: RAG Retrieval Quality Improvements
+
+**Goal:** Improve retrieval precision and recall for consultant queries by layering BM25 hybrid search (with Reciprocal Rank Fusion), BGE cross-encoder reranking, contextual chunk enrichment at ingest time, and parent-document retrieval — without requiring re-ingestion of all documents.
+
+**Depends on:** Phase 6
+
+**Requirements:** RAG-01, RAG-02, RAG-03, RAG-04, RAG-05
+
+**Success Criteria** (what must be TRUE):
+1. Queries that previously returned poor results due to vocabulary mismatch (e.g. "warranty" vs "warranty claims management") now retrieve correct chunks via BM25 keyword fallback
+2. Cross-encoder reranker (BGE) re-orders retrieved candidates so that the most relevant chunk is ranked #1 more often than with pure vector similarity
+3. Hybrid BM25+vector retrieval with RRF fusion outperforms pure vector retrieval on a set of 10 representative consultant queries
+4. Parent-document context retrieval returns larger surrounding passage to LLM when child chunk matches, improving answer completeness
+5. All improvements are additive — existing retrieval path remains functional and all prior tests continue to pass
+
+**Plans:** 5 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Test infrastructure: xfail stubs for RAG-01 through RAG-05, conftest fixtures (Wave 1)
+- [ ] 07-02-PLAN.md — BM25 hybrid search + RRF: bm25_index.py, rrf.py, pipeline integration (Wave 2, parallel with Plan 03)
+- [ ] 07-03-PLAN.md — BGE cross-encoder reranker: reranker.py, pipeline integration (Wave 2, parallel with Plan 02)
+- [ ] 07-04-PLAN.md — Contextual enrichment + parent-document retrieval: enricher.py, store.py schema, assembler expand_to_parent (Wave 3)
+- [ ] 07-05-PLAN.md — Integration + feature flag config: retrieval_config.py, pipeline wire-up, requirements.txt (Wave 4)
+
 ---
 
 ## Progress Tracking
@@ -174,6 +199,7 @@ Plans:
 | 4. Query Engine & Answer Generation | 4/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
 | 6. Multi-Provider LLM & Embedding Configuration | 4/4 | Complete   | 2026-03-31 |
+| 7. RAG Retrieval Quality Improvements | 0/5 | Planned    | — |
 
 ---
 
@@ -191,5 +217,6 @@ Plans:
 | Query (QUERY) | 5 | Phase 4 |
 | Chat UI (UI) | 2 | Phase 5 |
 | Provider Config (PROVIDER) | 6 | Phase 6 |
+| RAG Quality (RAG) | 5 | Phase 7 |
 
-**Status:** Phase 6 added — multi-provider configuration. Phase 5 complete.
+**Status:** Phase 7 added — RAG retrieval quality improvements. Phase 6 complete.
