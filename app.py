@@ -90,6 +90,29 @@ def _friendly_error(exc: Exception) -> str:
     )
 
 
+# --- Helper: render citations in collapsible expander ---
+
+
+def _render_citations(citations: list[dict]) -> None:
+    """Render citations in a collapsible expander with confidence badges.
+
+    HIGH confidence citations (bolded) indicate the source was cited 3+ times
+    across retrieved chunks — stronger evidence. LOW confidence appears 1-2 times.
+    """
+    if not citations:
+        return
+    with st.expander(f"Sources ({len(citations)} cited)", expanded=False):
+        for c in citations:
+            if c.get("confidence") == "HIGH":
+                badge = "**HIGH**"
+            else:
+                badge = "LOW"
+            st.markdown(
+                f"**[{c['index']}]** {c['filename']} "
+                f"— p.{c['page_num']} &nbsp; {badge}"
+            )
+
+
 # --- Sidebar ---
 
 with st.sidebar:
@@ -97,6 +120,12 @@ with st.sidebar:
     st.markdown(
         "Ask questions about past consulting engagements. "
         "The system searches 15+ years of project knowledge."
+    )
+    st.markdown(
+        "**How to use:**\n"
+        "1. Type your question in the chat box below\n"
+        "2. Press Enter to submit\n"
+        "3. Click 'Sources' under any answer to see cited documents"
     )
     st.divider()
 
@@ -120,6 +149,15 @@ with st.sidebar:
 st.title("Automotive Consulting Assistant")
 st.caption("Ask a question about our past automotive consulting work.")
 
+# --- Empty-corpus guard ---
+
+_db_path = Path(_DEFAULT_DB)
+if not _db_path.exists():
+    st.info(
+        "No documents indexed yet. Run the ingestion pipeline first: "
+        "`python src/main.py ingest --path <your_documents_folder>`"
+    )
+
 # --- Initialize chat history ---
 
 if "messages" not in st.session_state:
@@ -130,6 +168,8 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+        if msg["role"] == "assistant":
+            _render_citations(msg.get("citations", []))
 
 # --- Handle new input ---
 
@@ -161,6 +201,7 @@ if prompt := st.chat_input("Ask about our automotive consulting work..."):
                 elapsed = result.get("elapsed_s", 0.0)
 
                 st.markdown(answer_text)
+                _render_citations(citations)
                 st.session_state.messages.append(
                     {
                         "role": "assistant",
