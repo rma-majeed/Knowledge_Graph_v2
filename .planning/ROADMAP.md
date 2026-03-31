@@ -3,7 +3,7 @@
 **Project:** Automotive Consulting GraphRAG Agent
 **Created:** 2026-03-28
 **Granularity:** Standard (5-8 phases)
-**Status:** Phase 2 complete — Phase 3 planned
+**Status:** Phase 5 complete — Phase 6 planned
 
 ---
 
@@ -11,9 +11,10 @@
 
 - [x] **Phase 1: Document Ingestion Foundation** - Extract text from PDF and PPTX files into a chunk store
 - [x] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval (completed 2026-03-30)
-- [x] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph (completed 2026-03-30)
-- [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
-- [x] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system (completed 2026-03-31)
+- [x] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph (completed 2026-03-30)
+- [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
+- [x] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system (completed 2026-03-31)
+- [ ] **Phase 6: Multi-Provider LLM & Embedding Configuration** - Make LLM and embedding providers configurable via .env file using LiteLLM adapter (LM Studio, Ollama, Gemini, OpenAI, Anthropic)
 
 ---
 
@@ -138,6 +139,29 @@ Plans:
 
 **UI hint:** yes
 
+### Phase 6: Multi-Provider LLM & Embedding Configuration
+
+**Goal:** Any LLM or embedding model provider (LM Studio, Ollama, Gemini, OpenAI, Anthropic) can be used by setting environment variables in a `.env` file — no code changes required; LM Studio remains the default.
+
+**Depends on:** Phase 5
+
+**Requirements:** PROVIDER-01, PROVIDER-02, PROVIDER-03, PROVIDER-04, PROVIDER-05, PROVIDER-06
+
+**Success Criteria** (what must be TRUE):
+1. User can set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...` in `.env` and the query/graph steps use the Gemini LLM without any code change
+2. User can set `EMBED_PROVIDER=openai` and `OPENAI_API_KEY=...` in `.env` and the embed/query steps use the OpenAI embedding model without any code change
+3. When `.env` is absent or provider keys are unset, system behaves identically to current LM Studio behaviour (backward compatible)
+4. Switching embedding provider warns user that a full re-embed is required; the warning is surfaced at CLI and UI level before proceeding
+5. All pipeline tests pass for the default LM Studio config; provider switching is covered by unit tests with mocked LiteLLM calls
+
+**Plans:** 4 plans
+
+Plans:
+- [x] 06-01-PLAN.md — test stubs: test_config_providers.py (9 xfail), conftest fixtures, src/config/__init__.py (Wave 1)
+- [ ] 06-02-PLAN.md — src/config/providers.py factory functions, .env.example, requirements.txt update (Wave 2, parallel with Plan 03)
+- [ ] 06-03-PLAN.md — metadata table schema, embed mismatch detection in embed_all_chunks() (Wave 2, parallel with Plan 02)
+- [ ] 06-04-PLAN.md — call site refactoring: graph/pipeline.py, query/pipeline.py, app.py (Wave 3)
+
 ---
 
 ## Progress Tracking
@@ -149,6 +173,7 @@ Plans:
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
 | 4. Query Engine & Answer Generation | 4/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
+| 6. Multi-Provider LLM & Embedding Configuration | 1/4 | Executing | — |
 
 ---
 
@@ -165,5 +190,6 @@ Plans:
 | Knowledge Graph (GRAPH) | 4 | Phase 3 |
 | Query (QUERY) | 5 | Phase 4 |
 | Chat UI (UI) | 2 | Phase 5 |
+| Provider Config (PROVIDER) | 6 | Phase 6 |
 
-**Status:** All requirements mapped. Coverage = 100%. Phase 3 plans created — ready for execution.
+**Status:** Phase 6 added — multi-provider configuration. Phase 5 complete.

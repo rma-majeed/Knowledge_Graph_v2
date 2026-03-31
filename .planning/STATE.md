@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-current_plan: Not started
-status: unknown
-stopped_at: Plan 05-03 complete — Phase 5 done — all 5 phases complete — v1.0 milestone reached
-last_updated: "2026-03-31T07:12:37.296Z"
+current_phase: 06
+current_plan: 2
+status: executing
+stopped_at: Plan 06-01 complete — test infrastructure for Phase 6 multi-provider config
+last_updated: "2026-03-31T00:00:00Z"
 last_activity: 2026-03-31
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 22
-  completed_plans: 22
-  percent: 100
+  total_plans: 26
+  completed_plans: 23
+  percent: 88
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
 
 **Project:** Automotive Consulting GraphRAG Agent (Local GraphRAG for automotive consulting document intelligence)
 **Created:** 2026-03-28
-**Current Phase:** 05
+**Current Phase:** 06
 
 ---
 
@@ -46,16 +46,15 @@ progress:
 
 ## Current Position
 
-Phase: 4 (query-engine-answer-generation) — EXECUTING
-Plan: 4 of 4
-**Milestone:** Phase 1 Complete
-**Current Phase:** 01-document-ingestion-foundation
-**Current Plan:** Not started
-**Progress:** [██████████] 100%
+Phase: 06 (multi-provider-llm-embedding-configuration) — EXECUTING
+Plan: 2 of 4
+**Progress:** [█████████░] 88%
 
 **Next Steps:**
 
-1. Begin Phase 2: Embedding (LM Studio nomic-embed-text-1.5 -> ChromaDB)
+1. Execute 06-02: Implement src/config/providers.py (get_llm_client, get_embed_client, load_provider_config)
+2. Execute 06-03: Mismatch detection in embed pipeline
+3. Execute 06-04: Wire providers into all pipelines
 
 ---
 
@@ -125,6 +124,7 @@ All phases depend on LM Studio being available and functional.
 | sys.path bootstrap in src/main.py | Enables `python src/main.py` execution without PYTHONPATH — avoids env configuration burden | 01-06 |
 | ingest_document() opens/closes its own SQLite connection | Connection-per-call isolation prevents state leaks between files in batch ingestion | 01-06 |
 | PPTX slide_num normalized to page_num in pipeline layer | Uniform DB schema — downstream queries use page_num regardless of source doc type | 01-06 |
+| imports inside test functions (not at module level) | Allows collection of provider tests before src.config.providers exists; same xfail pattern as 01-01 | 06-01 |
 
 ---
 
@@ -162,21 +162,18 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-31
-**Stopped At:** Plan 05-03 complete — Phase 5 done — all 5 phases complete — v1.0 milestone reached
-**Files Written:** app.py (citations polish — e4f42e5)
+**Stopped At:** Plan 06-01 complete — test infrastructure for Phase 6 multi-provider config
+**Files Written:** src/config/__init__.py (f32e488), tests/conftest.py (8fcb533), tests/test_config_providers.py (550b4d1)
 **Git Status:** Clean
 
-**Phase 1 Complete — Ready for Phase 2:**
+**Plan 06-01 Complete — Ready for 06-02:**
 
-All Phase 1 components implemented and tested (18 tests, 0 failures):
+Phase 6 test infrastructure established (9 xfail stubs, 0 failures):
 
-- PDF extraction (extract_pdf)
-- PPTX extraction (extract_pptx)
-- Text chunking with tiktoken cl100k_base (chunk_text)
-- SQLite chunk store with SHA-256 deduplication (ChunkStore)
-- End-to-end pipeline (ingest_document, ingest_directory)
-- CLI entry point (python src/main.py ingest)
+- src/config/__init__.py — package marker for provider config module
+- tests/conftest.py — 5 new provider env fixtures appended
+- tests/test_config_providers.py — 9 xfail stubs covering PROVIDER-01 through PROVIDER-06
 
 ---
 
-**Plan 01-06 complete. Phase 1 DONE. All 18 tests pass. CLI verified: Documents ingested: 2, Total chunks stored: 5 for fixtures/.**
+**Plan 06-01 complete. 9 tests collected, 9 xfailed. No collection errors. No regressions.**
