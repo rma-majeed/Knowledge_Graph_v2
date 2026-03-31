@@ -12,7 +12,7 @@
 - [x] **Phase 1: Document Ingestion Foundation** - Extract text from PDF and PPTX files into a chunk store
 - [x] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval (completed 2026-03-30)
 - [x] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph (completed 2026-03-30)
-- [ ] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions
+- [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
 - [ ] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system
 
 ---
@@ -106,7 +106,7 @@ Plans:
 4. Every answer includes source citations (document name, page/slide number, confidence level HIGH/LOW based on citation count)
 5. Query latency (retrieve + generate) is under 15 seconds for typical consultant questions
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 04-01-test-infrastructure-PLAN.md — src/query/ stubs, 11 xfail test stubs across 3 test files (Wave 1)
@@ -142,7 +142,7 @@ Plans:
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
-| 4. Query Engine & Answer Generation | 3/4 | In Progress|  |
+| 4. Query Engine & Answer Generation | 3/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
 
 ---
