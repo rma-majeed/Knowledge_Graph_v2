@@ -112,6 +112,34 @@ def embed_all_chunks(
     if pending_count == 0:
         return {"chunks_embedded": 0, "batches": 0}
 
+    # --- PROVIDER-06: Embedding model mismatch detection ---
+    # Check if the model used to build existing embeddings differs from the current model.
+    # If it does, warn the user and require explicit confirmation before proceeding.
+    stored_model_row = None
+    try:
+        stored_model_row = conn.execute(
+            "SELECT value FROM metadata WHERE key = 'embed_model'"
+        ).fetchone()
+    except Exception:
+        pass  # metadata table may not exist in older databases — no-op
+
+    if stored_model_row is not None:
+        stored_model = stored_model_row[0] if isinstance(stored_model_row, (tuple, list)) else stored_model_row["value"]
+        if stored_model and stored_model != model:
+            print(
+                f"\nWARNING: Embedding model changed from '{stored_model}' to '{model}'.\n"
+                f"Existing vectors in ChromaDB were created with '{stored_model}'.\n"
+                f"Continuing will require re-embedding ALL chunks. This may take a long time.\n"
+                f"Type 'yes' to proceed with re-embedding, or anything else to abort: ",
+                end="",
+                flush=True,
+            )
+            user_input = input().strip().lower()
+            if user_input != "yes":
+                print("Aborted. No chunks were re-embedded.")
+                return {"chunks_embedded": 0, "batches": 0}
+    # --- End mismatch detection ---
+
     with tqdm(total=pending_count, desc="Embedding chunks", unit="chunk") as pbar:
         while True:
             batch_rows = store.get_chunks_with_metadata_for_embedding(
@@ -154,5 +182,15 @@ def embed_all_chunks(
             total_embedded += len(chunk_ids)
             batches += 1
             pbar.update(len(chunk_ids))
+
+    # Persist current embedding model to metadata table for future mismatch detection
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('embed_model', ?)",
+            (model,),
+        )
+        conn.commit()
+    except Exception:
+        pass  # metadata table may not exist (older schema) — do not fail the embed run
 
     return {"chunks_embedded": total_embedded, "batches": batches}
