@@ -21,3 +21,10 @@ rapidfuzz>=3.14.0
 
 # LM Studio API client
 openai>=1.0.0
+
+# Multi-provider LLM and embedding adapter
+litellm>=1.45.0
+python-dotenv>=1.0.0
+
+# Chat UI
+streamlit>=1.30.0
