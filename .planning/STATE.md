@@ -4,15 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 07
 status: unknown
-stopped_at: "Completed 07-03: BGE cross-encoder reranker (reranker.py, pipeline integration, retrieval_config.py)"
-last_updated: "2026-03-31T15:40:45.558Z"
+stopped_at: "Completed 07-04: Contextual enrichment + parent-document retrieval (enricher.py, schema, store, assembler, pipeline)"
+last_updated: "2026-03-31T15:57:35Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 31
-  completed_plans: 28
-  percent: 90
+  completed_plans: 29
+  percent: 94
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -46,14 +46,12 @@ progress:
 ## Current Position
 
 Phase: 07 (rag-retrieval-quality-improvements) — EXECUTING
-Plan: 03 complete (3/5 plans done)
-**Progress:** [█████████░] 90%
+Plan: 04 complete (4/5 plans done)
+**Progress:** [█████████░] 94%
 
 **Next Steps:**
 
-1. Execute 07-03: BGE cross-encoder reranker (reranker.py, pipeline integration)
-2. Execute 07-04: Contextual enrichment + parent-document retrieval
-3. Execute 07-05: Integration + feature flag config (requirements.txt, full test coverage)
+1. Execute 07-05: Integration + feature flag config (requirements.txt, full test coverage)
 
 ---
 
@@ -131,6 +129,9 @@ All phases depend on LM Studio being available and functional.
 | xfail(strict=False) for RAG-01..RAG-05 stubs | Auto-pass once implementations land; same pattern as phases 1-6 wave-0 | 07-01 |
 | BM25Indexer._built flag for build-state tracking | Distinguishes "built with empty corpus" (returns []) from "never built" (raises RuntimeError) | 07-02 |
 | retrieval_config.py created in 07-02 | Unblocks pipeline integration; 07-05 owns full feature flag test coverage | 07-02 |
+| enriched_text via ALTER TABLE not CREATE TABLE | Backward-compat: existing databases do not break when upgrading to Phase 7 schema | 07-04 |
+| v1 parent mapping is identity (child==parent) | Simplest correct implementation; schema supports future true-parent chunking without migration | 07-04 |
+| enrich_chunk_context dispatches via hasattr(provider) | Consistent with providers.py _LiteLLMConfig pattern established in Phase 6 | 07-04 |
 
 ---
 
@@ -168,8 +169,8 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-31
-**Stopped At:** Completed 07-03: BGE cross-encoder reranker + 07-02: BM25 hybrid search + RRF
-**Files Written:** src/query/bm25_index.py, src/query/rrf.py, src/query/reranker.py, src/config/retrieval_config.py, requirements.txt
+**Stopped At:** Completed 07-04: Contextual enrichment + parent-document retrieval
+**Files Written:** src/ingest/enricher.py, src/db/schema.sql, src/ingest/store.py, src/query/assembler.py, src/ingest/pipeline.py
 **Git Status:** Clean
 
 **Plan 07-02 Complete — Ready for 07-03:**
