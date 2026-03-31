@@ -27,9 +27,9 @@
 ### Query & Answer
 
 - [ ] **QUERY-01**: User can submit a natural language question and receive a synthesized answer
-- [ ] **QUERY-02**: System retrieves relevant chunks via vector similarity (local search)
-- [ ] **QUERY-03**: System augments retrieval with graph-traversal context (entity neighborhood expansion)
-- [ ] **QUERY-04**: Every answer includes source citations (document name, page/slide reference)
+- [x] **QUERY-02**: System retrieves relevant chunks via vector similarity (local search)
+- [x] **QUERY-03**: System augments retrieval with graph-traversal context (entity neighborhood expansion)
+- [x] **QUERY-04**: Every answer includes source citations (document name, page/slide reference)
 - [ ] **QUERY-05**: LLM answer generation uses local model via LM Studio (Qwen2.5 7B q4 or equivalent)
 
 ### Chat UI
@@ -86,9 +86,9 @@
 | GRAPH-03 | Phase 3 | Complete |
 | GRAPH-04 | Phase 3 | Complete |
 | QUERY-01 | Phase 4 | Pending |
-| QUERY-02 | Phase 4 | Pending |
-| QUERY-03 | Phase 4 | Pending |
-| QUERY-04 | Phase 4 | Pending |
+| QUERY-02 | Phase 4 | Complete |
+| QUERY-03 | Phase 4 | Complete |
+| QUERY-04 | Phase 4 | Complete |
 | QUERY-05 | Phase 4 | Pending |
 | UI-01 | Phase 5 | Pending |
 | UI-02 | Phase 5 | Pending |
