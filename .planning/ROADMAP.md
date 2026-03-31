@@ -129,7 +129,12 @@ Plans:
 4. Source citations are clickable or formatted to help consultant quickly find the referenced document
 5. System does not crash or require restart when processing queries; error messages are user-friendly and do not expose technical jargon
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 05-01-test-infrastructure-PLAN.md — app.py stub + 4 AppTest xfail stubs (Wave 1)
+- [ ] 05-02-chat-app-PLAN.md — full Streamlit chat interface with session state + error handling (Wave 2)
+- [ ] 05-03-citations-and-polish-PLAN.md — citations expander, HIGH/LOW badges, polish (Wave 3)
 
 **UI hint:** yes
 
@@ -143,7 +148,7 @@ Plans:
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
 | 4. Query Engine & Answer Generation | 3/4 | Complete    | 2026-03-31 |
-| 5. Chat UI & Session Management | 0/3 | Not started | - |
+| 5. Chat UI & Session Management | 0/3 | Planned | - |
 
 ---
 
