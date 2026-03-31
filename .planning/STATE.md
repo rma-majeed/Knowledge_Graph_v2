@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 07
-status: unknown
-stopped_at: "Completed 07-04: Contextual enrichment + parent-document retrieval (enricher.py, schema, store, assembler, pipeline)"
-last_updated: "2026-03-31T15:57:35Z"
+status: complete
+stopped_at: "Completed 07-05: Integration + feature flag config (pipeline parent-doc wiring, full test suite XPASS)"
+last_updated: "2026-03-31T16:16:58.625Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 31
-  completed_plans: 29
-  percent: 94
+  completed_plans: 31
+  percent: 100
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -45,13 +45,13 @@ progress:
 
 ## Current Position
 
-Phase: 07 (rag-retrieval-quality-improvements) — EXECUTING
-Plan: 04 complete (4/5 plans done)
-**Progress:** [█████████░] 94%
+Phase: 07 (rag-retrieval-quality-improvements) — COMPLETE
+Plan: 05 complete (5/5 plans done)
+**Progress:** [██████████] 100%
 
-**Next Steps:**
+**All Phases Complete — v1.0 milestone achieved.**
 
-1. Execute 07-05: Integration + feature flag config (requirements.txt, full test coverage)
+All 17 v1 requirements implemented across 7 phases, 31 plans. Full test suite: 39 passed, 4 xfailed, 52 xpassed, zero failures.
 
 ---
 
@@ -132,6 +132,8 @@ All phases depend on LM Studio being available and functional.
 | enriched_text via ALTER TABLE not CREATE TABLE | Backward-compat: existing databases do not break when upgrading to Phase 7 schema | 07-04 |
 | v1 parent mapping is identity (child==parent) | Simplest correct implementation; schema supports future true-parent chunking without migration | 07-04 |
 | enrich_chunk_context dispatches via hasattr(provider) | Consistent with providers.py _LiteLLMConfig pattern established in Phase 6 | 07-04 |
+| Parent-doc expansion in pipeline imports inside function body | Ensures monkeypatch works in tests; Step 4c runs after reranking to preserve relevance order | 07-05 |
+| Empty parent_texts short-circuits expansion | No performance penalty for existing DBs without re-ingest; backward-compat maintained | 07-05 |
 
 ---
 
@@ -169,7 +171,7 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-31
-**Stopped At:** Completed 07-04: Contextual enrichment + parent-document retrieval
+**Stopped At:** Completed 07-05: Integration + feature flag config (pipeline parent-doc wiring, full test suite XPASS)
 **Files Written:** src/ingest/enricher.py, src/db/schema.sql, src/ingest/store.py, src/query/assembler.py, src/ingest/pipeline.py
 **Git Status:** Clean
 

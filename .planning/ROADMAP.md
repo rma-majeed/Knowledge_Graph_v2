@@ -15,7 +15,7 @@
 - [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
 - [x] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system (completed 2026-03-31)
 - [x] **Phase 6: Multi-Provider LLM & Embedding Configuration** - Make LLM and embedding providers configurable via .env file using LiteLLM adapter (LM Studio, Ollama, Gemini, OpenAI, Anthropic) (completed 2026-03-31)
-- [ ] **Phase 7: RAG Retrieval Quality Improvements** - Improve retrieval precision and recall through BM25 hybrid search with RRF fusion, BGE cross-encoder reranking, contextual chunk enrichment, and parent-document retrieval
+- [x] **Phase 7: RAG Retrieval Quality Improvements** - Improve retrieval precision and recall through BM25 hybrid search with RRF fusion, BGE cross-encoder reranking, contextual chunk enrichment, and parent-document retrieval (completed 2026-03-31)
 
 ---
 
@@ -178,14 +178,14 @@ Plans:
 4. Parent-document context retrieval returns larger surrounding passage to LLM when child chunk matches, improving answer completeness
 5. All improvements are additive — existing retrieval path remains functional and all prior tests continue to pass
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md — Test infrastructure: xfail stubs for RAG-01 through RAG-05, conftest fixtures (Wave 1)
 - [x] 07-02-PLAN.md — BM25 hybrid search + RRF: bm25_index.py, rrf.py, pipeline integration (Wave 2, parallel with Plan 03)
 - [x] 07-03-PLAN.md — BGE cross-encoder reranker: reranker.py, pipeline integration (Wave 2, parallel with Plan 02)
 - [x] 07-04-PLAN.md — Contextual enrichment + parent-document retrieval: enricher.py, store.py schema, assembler expand_to_parent (Wave 3)
-- [ ] 07-05-PLAN.md — Integration + feature flag config: retrieval_config.py, pipeline wire-up, requirements.txt (Wave 4)
+- [x] 07-05-PLAN.md — Integration + feature flag config: retrieval_config.py, pipeline wire-up, requirements.txt (Wave 4)
 
 ---
 
@@ -199,7 +199,7 @@ Plans:
 | 4. Query Engine & Answer Generation | 4/4 | Complete    | 2026-03-31 |
 | 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
 | 6. Multi-Provider LLM & Embedding Configuration | 4/4 | Complete   | 2026-03-31 |
-| 7. RAG Retrieval Quality Improvements | 4/5 | In Progress|  |
+| 7. RAG Retrieval Quality Improvements | 5/5 | Complete   | 2026-03-31 |
 
 ---
 
