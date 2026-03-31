@@ -31,3 +31,6 @@ streamlit>=1.30.0
 
 # BM25 keyword index for hybrid retrieval (RAG-01)
 rank_bm25>=0.2.2
+
+# Cross-encoder reranker (RAG-02)
+sentence-transformers>=2.7.0

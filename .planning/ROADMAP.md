@@ -178,12 +178,12 @@ Plans:
 4. Parent-document context retrieval returns larger surrounding passage to LLM when child chunk matches, improving answer completeness
 5. All improvements are additive — existing retrieval path remains functional and all prior tests continue to pass
 
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — Test infrastructure: xfail stubs for RAG-01 through RAG-05, conftest fixtures (Wave 1)
 - [x] 07-02-PLAN.md — BM25 hybrid search + RRF: bm25_index.py, rrf.py, pipeline integration (Wave 2, parallel with Plan 03)
-- [ ] 07-03-PLAN.md — BGE cross-encoder reranker: reranker.py, pipeline integration (Wave 2, parallel with Plan 02)
+- [x] 07-03-PLAN.md — BGE cross-encoder reranker: reranker.py, pipeline integration (Wave 2, parallel with Plan 02)
 - [ ] 07-04-PLAN.md — Contextual enrichment + parent-document retrieval: enricher.py, store.py schema, assembler expand_to_parent (Wave 3)
 - [ ] 07-05-PLAN.md — Integration + feature flag config: retrieval_config.py, pipeline wire-up, requirements.txt (Wave 4)
 
