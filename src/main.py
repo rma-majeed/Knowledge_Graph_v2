@@ -192,6 +192,57 @@ def cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_query(args: argparse.Namespace) -> int:
+    """Run the query pipeline and print answer + citations."""
+    import kuzu
+    from src.embed.pipeline import check_lm_studio
+    from src.query.pipeline import answer_question
+
+    db_path = Path(args.db)
+    graph_path = Path(args.graph)
+    chroma_path = Path(args.chroma)
+
+    if not db_path.exists():
+        print(f"Error: Database not found: {db_path}", file=sys.stderr)
+        return 1
+
+    if not graph_path.exists():
+        print(f"Error: KuzuDB not found: {graph_path}", file=sys.stderr)
+        return 1
+
+    if not check_lm_studio():
+        print(
+            "Error: LM Studio is not running at localhost:1234.\n"
+            "Ensure LM Studio is running. For query, load the LLM model\n"
+            f"({args.llm_model}) — not the embedding model.",
+            file=sys.stderr,
+        )
+        return 1
+
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    db = kuzu.Database(str(graph_path))
+
+    try:
+        result = answer_question(
+            question=args.question,
+            conn=conn,
+            kuzu_db=db,
+            chroma_path=str(chroma_path),
+            embed_model=args.embed_model,
+            llm_model=args.llm_model,
+            n_results=args.top_k,
+        )
+        print(f"\n{result['answer']}\n")
+        elapsed = result.get("elapsed_s", 0.0)
+        print(f"Query completed in {elapsed:.1f}s")
+    finally:
+        conn.close()
+
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="graphrag",
@@ -245,6 +296,41 @@ def main() -> int:
         help="Extraction checkpoint file (default: data/extraction_state.json)"
     )
     p_graph.set_defaults(func=cmd_graph)
+
+    # query subcommand
+    p_query = subparsers.add_parser("query", help="Answer a natural language question")
+    p_query.add_argument(
+        "--question", required=True,
+        help="Natural language question to answer"
+    )
+    p_query.add_argument(
+        "--db", default="data/chunks.db",
+        help="SQLite database path (default: data/chunks.db)"
+    )
+    p_query.add_argument(
+        "--chroma", default="data/chroma_db",
+        help="ChromaDB path (default: data/chroma_db)"
+    )
+    p_query.add_argument(
+        "--graph", default="data/kuzu_db",
+        help="KuzuDB directory path (default: data/kuzu_db)"
+    )
+    p_query.add_argument(
+        "--embed-model", default="nomic-embed-text-v1.5",
+        dest="embed_model",
+        help="LM Studio embedding model (default: nomic-embed-text-v1.5)"
+    )
+    p_query.add_argument(
+        "--llm-model", default="Qwen2.5-7B-Instruct",
+        dest="llm_model",
+        help="LM Studio LLM model for answer generation (default: Qwen2.5-7B-Instruct)"
+    )
+    p_query.add_argument(
+        "--top-k", type=int, default=10,
+        dest="top_k",
+        help="Number of vector results before graph expansion (default: 10)"
+    )
+    p_query.set_defaults(func=cmd_query)
 
     args = parser.parse_args()
     return args.func(args)
