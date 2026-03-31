@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 07
-status: executing
-stopped_at: "Completed 07-01: Test infrastructure xfail stubs and conftest fixtures for RAG-01..RAG-05"
-last_updated: "2026-03-31T15:19:40.985Z"
+status: unknown
+stopped_at: "Completed 07-02: BM25 hybrid search + RRF fusion"
+last_updated: "2026-03-31T15:40:45.558Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 31
-  completed_plans: 27
-  percent: 87
+  completed_plans: 28
+  percent: 90
 ---
 
 # Project State: Automotive Consulting GraphRAG Agent
@@ -46,15 +46,14 @@ progress:
 ## Current Position
 
 Phase: 07 (rag-retrieval-quality-improvements) — EXECUTING
-Plan: 01 complete (1/5 plans done)
-**Progress:** [█████████░] 87%
+Plan: 02 complete (2/5 plans done)
+**Progress:** [█████████░] 90%
 
 **Next Steps:**
 
-1. Execute 07-02: BM25 hybrid search + RRF (bm25_index.py, rrf.py, pipeline integration)
-2. Execute 07-03: BGE cross-encoder reranker (reranker.py, pipeline integration)
-3. Execute 07-04: Contextual enrichment + parent-document retrieval
-4. Execute 07-05: Integration + feature flag config (retrieval_config.py, requirements.txt)
+1. Execute 07-03: BGE cross-encoder reranker (reranker.py, pipeline integration)
+2. Execute 07-04: Contextual enrichment + parent-document retrieval
+3. Execute 07-05: Integration + feature flag config (requirements.txt, full test coverage)
 
 ---
 
@@ -130,6 +129,8 @@ All phases depend on LM Studio being available and functional.
 | _LiteLLMConfig is a config holder not a client | Avoids importing litellm at startup; callers check hasattr(client, 'provider') to route between OpenAI and LiteLLM | 06-02 |
 | get_*_client() reads os.getenv() on every call | No module-level cache so pytest monkeypatch works correctly in tests | 06-02 |
 | xfail(strict=False) for RAG-01..RAG-05 stubs | Auto-pass once implementations land; same pattern as phases 1-6 wave-0 | 07-01 |
+| BM25Indexer._built flag for build-state tracking | Distinguishes "built with empty corpus" (returns []) from "never built" (raises RuntimeError) | 07-02 |
+| retrieval_config.py created in 07-02 | Unblocks pipeline integration; 07-05 owns full feature flag test coverage | 07-02 |
 
 ---
 
@@ -167,18 +168,21 @@ None. All prerequisites met:
 ## Session Continuity
 
 **Last Activity:** 2026-03-31
-**Stopped At:** Completed 07-01: Test infrastructure xfail stubs and conftest fixtures for RAG-01..RAG-05
-**Files Written:** tests/test_retrieval_quality.py (36a0f67), tests/conftest.py (fcab6bd)
+**Stopped At:** Completed 07-02: BM25 hybrid search + RRF fusion
+**Files Written:** src/query/bm25_index.py (3998a82), src/query/rrf.py (619b01d), src/query/pipeline.py + src/config/retrieval_config.py (4883300), requirements.txt (3998a82)
 **Git Status:** Clean
 
-**Plan 07-01 Complete — Ready for 07-02:**
+**Plan 07-02 Complete — Ready for 07-03:**
 
-Phase 7 test infrastructure implemented (RAG-01..RAG-05):
+BM25 hybrid search + RRF fusion implemented (RAG-01):
 
-- tests/conftest.py — bm25_corpus, mock_reranker_scores, sample_enriched_chunks, chunk_parent_map fixtures
-- tests/test_retrieval_quality.py — 12 xfail stubs covering all 5 RAG requirements
+- src/query/bm25_index.py — BM25Indexer wrapping rank_bm25.BM25Okapi with graceful empty-corpus fallback
+- src/query/rrf.py — rrf_fuse(*ranked_lists, k=60) with deduplication and _rrf_score annotation
+- src/query/pipeline.py — BM25+RRF wired into answer_question() and stream_answer_question() behind RAG_ENABLE_BM25 flag
+- src/config/retrieval_config.py — feature flags for all 4 RAG improvements (RAG-01..RAG-04)
+- requirements.txt — rank_bm25>=0.2.2 added
 
-Full suite: 39 passed, 16 xfailed, 40 xpassed — zero regressions.
+Full suite: 39 passed, 10 xfailed, 46 xpassed — zero regressions.
 
 **Plan 06-03 Complete — Ready for 06-04:**
 
