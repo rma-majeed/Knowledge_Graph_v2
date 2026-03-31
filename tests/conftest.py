@@ -119,3 +119,72 @@ def mock_env_anthropic(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "anthropic")
     monkeypatch.setenv("LLM_MODEL", "anthropic/claude-sonnet-4-5")
     monkeypatch.setenv("LLM_API_KEY", "test-anthropic-api-key")
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: RAG retrieval quality fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def bm25_corpus():
+    """Small in-memory chunk corpus for BM25 index unit tests.
+
+    Returns a list of dicts matching the chunk shape used in retriever.py:
+      {chunk_id, text, filename, page_num, source, distance}
+    """
+    return [
+        {"chunk_id": "1", "text": "warranty claims management automation reduces processing time", "filename": "a.pdf", "page_num": 1, "source": "vector", "distance": 0.1},
+        {"chunk_id": "2", "text": "electric vehicle battery supply chain optimization", "filename": "b.pdf", "page_num": 2, "source": "vector", "distance": 0.2},
+        {"chunk_id": "3", "text": "supplier quality audit findings for tier-2 automotive parts", "filename": "c.pdf", "page_num": 3, "source": "vector", "distance": 0.3},
+        {"chunk_id": "4", "text": "warranty cost reduction through predictive analytics", "filename": "a.pdf", "page_num": 4, "source": "vector", "distance": 0.4},
+        {"chunk_id": "5", "text": "OEM partnership strategy for electric vehicle platforms", "filename": "b.pdf", "page_num": 5, "source": "vector", "distance": 0.5},
+    ]
+
+
+@pytest.fixture
+def mock_reranker_scores():
+    """Pre-computed reranker scores for a fixed (query, passage) set.
+
+    Simulates the output of CrossEncoder.predict() — a list of floats, one per
+    (query, passage) pair. Order matches bm25_corpus fixture.
+    """
+    return [0.92, 0.31, 0.15, 0.88, 0.42]
+
+
+@pytest.fixture
+def sample_enriched_chunks():
+    """Chunks with enriched_text field set (as stored after contextual enrichment).
+
+    Used to verify that truncate_to_budget prefers enriched_text when available.
+    """
+    return [
+        {
+            "chunk_id": "10",
+            "text": "original chunk text about warranty",
+            "enriched_text": "Context: This passage is from a consulting report on warranty management. warranty claims automation reduces cost",
+            "filename": "warranty_report.pdf",
+            "page_num": 7,
+            "source": "vector",
+            "distance": 0.1,
+        },
+        {
+            "chunk_id": "11",
+            "text": "original text about EV strategy",
+            "enriched_text": None,
+            "filename": "ev_report.pdf",
+            "page_num": 2,
+            "source": "vector",
+            "distance": 0.2,
+        },
+    ]
+
+
+@pytest.fixture
+def chunk_parent_map():
+    """Mapping of child_chunk_id -> parent_chunk_id for parent-doc retrieval tests."""
+    return {
+        "10": "10",   # identity mapping: v1 uses existing chunks as own parents
+        "11": "11",
+        "1": "1",
+        "2": "2",
+    }
