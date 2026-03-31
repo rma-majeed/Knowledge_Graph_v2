@@ -46,6 +46,84 @@ def _llm_complete(client, model: str, messages: list, **kwargs):
     return client.chat.completions.create(model=model, messages=messages, **kwargs)
 
 
+_EXPAND_MAX_TOKENS = 150
+_EXPAND_SYSTEM = (
+    "Generate 3 alternative search queries for the given question using different terminology "
+    "that might appear in consulting documents — e.g., process names, technical terms, business "
+    "outcomes, or industry jargon. Return ONLY the 3 queries, one per line, no numbering, "
+    "no explanation, no blank lines."
+)
+
+_REWRITE_MAX_TOKENS = 80
+_REWRITE_SYSTEM = (
+    "Rewrite the user's question to be fully self-contained, replacing any pronouns or "
+    "references that depend on the conversation history with explicit terms. "
+    "If the question is already self-contained, return it unchanged. "
+    "Return ONLY the rewritten question — no explanation, no punctuation changes."
+)
+
+
+def _expand_queries(question: str, client, llm_model: str) -> list[str]:
+    """Generate alternative phrasings of a query to improve retrieval coverage.
+
+    Example:
+        question: "what information is available on warranty?"
+        returns: [
+            "what information is available on warranty?",
+            "warranty claims management and processing",
+            "automated warranty approval system",
+            "warranty cost reduction and fraud prevention",
+        ]
+
+    Falls back to [question] on any error so retrieval always proceeds.
+    """
+    messages = [
+        {"role": "system", "content": _EXPAND_SYSTEM},
+        {"role": "user", "content": question},
+    ]
+    try:
+        response = _llm_complete(client, llm_model, messages, temperature=0.0, max_tokens=_EXPAND_MAX_TOKENS)
+        lines = response.choices[0].message.content.strip().split("\n")
+        expansions = [l.strip() for l in lines if l.strip()][:3]
+        return [question] + expansions
+    except Exception:
+        return [question]
+
+
+def _rewrite_query(
+    question: str,
+    conversation_history: list[dict],
+    client,
+    llm_model: str,
+) -> str:
+    """Use the LLM to rewrite a follow-up question into a self-contained query.
+
+    Example:
+        history: "What did Toyota do in EVs?" / "Toyota invested in solid-state..."
+        question: "What about Honda?"
+        rewritten: "What did Honda do in electric vehicle strategy?"
+
+    Falls back to the original question on any error.
+    """
+    if not conversation_history:
+        return question
+
+    history_text = "\n".join(
+        f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content'][:400]}"
+        for m in conversation_history
+    )
+    messages = [
+        {"role": "system", "content": _REWRITE_SYSTEM},
+        {"role": "user", "content": f"Conversation so far:\n{history_text}\n\nNew question: {question}"},
+    ]
+    try:
+        response = _llm_complete(client, llm_model, messages, temperature=0.0, max_tokens=_REWRITE_MAX_TOKENS)
+        rewritten = response.choices[0].message.content.strip()
+        return rewritten if rewritten else question
+    except Exception:
+        return question
+
+
 DEFAULT_LLM_MODEL = "Qwen2.5-7B-Instruct"
 DEFAULT_EMBED_MODEL = "nomic-embed-text-v1.5"
 _COLLECTION_NAME = "chunks"
@@ -65,6 +143,7 @@ def answer_question(
     context_budget: int = DEFAULT_CONTEXT_BUDGET,
     openai_client=None,
     chroma_client=None,
+    conversation_history: list[dict] | None = None,
 ) -> dict:
     """Run hybrid retrieval + LM Studio answer generation for a natural language question.
 
@@ -85,7 +164,7 @@ def answer_question(
         - citations (list[dict]): [{index, filename, page_num, confidence, source, count}, ...]
         - elapsed_s (float): Total wall-clock seconds for retrieve + generate
     """
-    from src.query.retriever import hybrid_retrieve
+    from src.query.retriever import vector_search, graph_expand, deduplicate_chunks
     from src.query.assembler import (
         truncate_to_budget,
         build_citations,
@@ -105,25 +184,29 @@ def answer_question(
 
     start = time.perf_counter()
 
-    # Step 1: Hybrid retrieval (vector + 1-hop graph expansion)
-    chunks = hybrid_retrieve(
-        query_text=question,
-        openai_client=openai_client,
-        chroma_client=chroma_client,
-        collection_name=_COLLECTION_NAME,
-        citation_store=citation_store,
-        kuzu_db=kuzu_db,
-        sqlite_conn=conn,
-        embed_model=embed_model,
-        n_results=n_results,
-    )
+    # Step 1: Rewrite question for better retrieval if conversation history present
+    retrieval_query = _rewrite_query(question, conversation_history or [], openai_client, llm_model)
 
-    # Step 2: Assemble context within token budget
+    # Step 2: Expand into multiple query variants for broader retrieval coverage
+    queries = _expand_queries(retrieval_query, openai_client, llm_model)
+
+    # Step 3: Multi-query vector search — run each variant, merge, deduplicate
+    all_vector_chunks: list = []
+    for q in queries:
+        all_vector_chunks.extend(
+            vector_search(q, openai_client, chroma_client, _COLLECTION_NAME, embed_model, n_results)
+        )
+    vector_chunks = deduplicate_chunks(all_vector_chunks)
+
+    # Step 4: Graph expand on merged vector results
+    graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
+    chunks = deduplicate_chunks(vector_chunks + graph_chunks)
+
+    # Step 5: Assemble context within token budget
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
 
-    # Step 3: Build prompt and call LM Studio LLM
-    # Fresh messages list per call — never accumulate history (stateless pipeline)
-    messages = build_prompt(question, context_str)
+    # Step 6: Build prompt with conversation history for multi-turn context
+    messages = build_prompt(question, context_str, conversation_history=conversation_history)
 
     if not included_chunks:
         llm_response = "The available documents do not contain sufficient information to answer this question."
@@ -156,6 +239,7 @@ def stream_answer_question(
     context_budget: int = DEFAULT_CONTEXT_BUDGET,
     openai_client=None,
     chroma_client=None,
+    conversation_history: list[dict] | None = None,
 ):
     """Run hybrid retrieval then stream LM Studio answer token-by-token.
 
@@ -166,7 +250,7 @@ def stream_answer_question(
     Retrieval and assembly happen eagerly before streaming starts.
     If no chunks are found, token_stream yields a single fallback message.
     """
-    from src.query.retriever import hybrid_retrieve
+    from src.query.retriever import vector_search, graph_expand, deduplicate_chunks
     from src.query.assembler import truncate_to_budget, build_citations, build_prompt
     from src.graph.citations import CitationStore
 
@@ -179,17 +263,23 @@ def stream_answer_question(
 
     citation_store = CitationStore(conn)
 
-    chunks = hybrid_retrieve(
-        query_text=question,
-        openai_client=openai_client,
-        chroma_client=chroma_client,
-        collection_name=_COLLECTION_NAME,
-        citation_store=citation_store,
-        kuzu_db=kuzu_db,
-        sqlite_conn=conn,
-        embed_model=embed_model,
-        n_results=n_results,
-    )
+    # Rewrite follow-up questions into self-contained queries for better retrieval
+    retrieval_query = _rewrite_query(question, conversation_history or [], openai_client, llm_model)
+
+    # Expand into multiple query variants for broader retrieval coverage
+    queries = _expand_queries(retrieval_query, openai_client, llm_model)
+
+    # Multi-query vector search — run each variant, merge, deduplicate
+    all_vector_chunks: list = []
+    for q in queries:
+        all_vector_chunks.extend(
+            vector_search(q, openai_client, chroma_client, _COLLECTION_NAME, embed_model, n_results)
+        )
+    vector_chunks = deduplicate_chunks(all_vector_chunks)
+
+    # Graph expand on merged vector results
+    graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
+    chunks = deduplicate_chunks(vector_chunks + graph_chunks)
 
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
     citations = build_citations(included_chunks)
@@ -199,7 +289,7 @@ def stream_answer_question(
             yield "The available documents do not contain sufficient information to answer this question."
         return citations, _fallback()
 
-    messages = build_prompt(question, context_str)
+    messages = build_prompt(question, context_str, conversation_history=conversation_history)
 
     stream = _llm_complete(openai_client, llm_model, messages,
                            temperature=_LLM_TEMPERATURE, max_tokens=_LLM_MAX_TOKENS,

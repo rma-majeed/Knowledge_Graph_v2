@@ -1,6 +1,6 @@
 # GraphRAG Agent — Setup & Usage Guide
 
-A locally-run GraphRAG agent that indexes PDF and PPTX documents, builds a knowledge graph, and answers natural language questions through a browser chat interface. All processing runs on your laptop — no cloud or paid APIs required.
+A locally-run GraphRAG agent that indexes PDF and PPTX documents, builds a knowledge graph, and answers natural language questions through a browser chat interface. Runs entirely on your laptop — no cloud or paid APIs required by default, with optional cloud provider support via a simple `.env` configuration.
 
 ---
 
@@ -8,20 +8,22 @@ A locally-run GraphRAG agent that indexes PDF and PPTX documents, builds a knowl
 
 1. [Hardware & Software Requirements](#1-hardware--software-requirements)
 2. [First-Time Installation](#2-first-time-installation)
-3. [LM Studio Setup](#3-lm-studio-setup)
-4. [Running the Pipeline Step by Step](#4-running-the-pipeline-step-by-step)
-5. [Starting the Chat UI](#5-starting-the-chat-ui)
-6. [Querying from the Command Line](#6-querying-from-the-command-line)
-7. [Checking Ingestion Stats](#7-checking-ingestion-stats)
-8. [Resetting for a New Domain](#8-resetting-for-a-new-domain)
-9. [Full CLI Reference](#9-full-cli-reference)
-10. [Troubleshooting](#10-troubleshooting)
+3. [Model & Provider Configuration](#3-model--provider-configuration)
+4. [LM Studio Setup (Default)](#4-lm-studio-setup-default)
+5. [Running the Pipeline Step by Step](#5-running-the-pipeline-step-by-step)
+6. [Starting the Chat UI](#6-starting-the-chat-ui)
+7. [Querying from the Command Line](#7-querying-from-the-command-line)
+8. [Checking Ingestion Stats](#8-checking-ingestion-stats)
+9. [Resetting for a New Domain](#9-resetting-for-a-new-domain)
+10. [Full CLI Reference](#10-full-cli-reference)
+11. [Troubleshooting](#11-troubleshooting)
 
 ---
 
 ## 1. Hardware & Software Requirements
 
 ### Hardware
+
 | Resource | Minimum | Notes |
 |----------|---------|-------|
 | RAM | 16 GB | 32 GB recommended for large corpora |
@@ -29,8 +31,9 @@ A locally-run GraphRAG agent that indexes PDF and PPTX documents, builds a knowl
 | Storage | 10 GB free | For models, embeddings, and graph data |
 
 ### Software
+
 - **Python 3.10 or later**
-- **LM Studio** — local AI model server (free, [lmstudio.ai](https://lmstudio.ai))
+- **LM Studio** — local AI model server (free) — required for the default setup
 - **PowerShell** (Windows) — use PowerShell, not Git Bash, for reliable Ctrl+C behaviour
 
 ---
@@ -54,9 +57,109 @@ pip install -r requirements.txt
 
 ---
 
-## 3. LM Studio Setup
+## 3. Model & Provider Configuration
 
-The pipeline uses two models served through LM Studio's local API. You must download both models once and load the correct one at each pipeline stage.
+The system uses two AI models at different stages of the pipeline:
+
+| Role | What it does | Used at |
+|------|-------------|---------|
+| **Embedding model** | Converts text into vectors for semantic search | Embed step + every query |
+| **LLM** | Extracts entities from documents and generates answers | Graph step + every query |
+
+### Default setup — LM Studio (no configuration needed)
+
+Out of the box, both models are served by LM Studio running on your laptop. No `.env` file is required. If no `.env` file is present, the system automatically uses:
+
+| Role | Default model | Server |
+|------|--------------|--------|
+| Embedding | `nomic-embed-text-v1.5` | LM Studio at `http://localhost:1234` |
+| LLM | `Qwen2.5-7B-Instruct` | LM Studio at `http://localhost:1234` |
+
+### Using a different model within LM Studio
+
+You can load any instruction-following model in LM Studio and pass its name at runtime — no code changes, no `.env` file:
+
+```powershell
+# Graph step with a different LLM
+python src/main.py graph --model "Mistral-7B-Instruct"
+
+# Query step with a different LLM
+python src/main.py query --question "Your question" --llm-model "Llama-3.1-8B-Instruct"
+```
+
+In the Chat UI sidebar, clear the **LLM Model** field and type your model name — takes effect on the next question.
+
+> LM Studio ignores the model name string in the API call — it always runs whichever model is currently loaded in the Developer tab. The name you pass just needs to match what you have loaded so logs stay consistent.
+
+**Model selection notes:**
+
+| Factor | Notes |
+|--------|-------|
+| VRAM | Target Q4_K_M quantised models. 7B–8B models typically need 3.5–4.5 GB VRAM. |
+| Instruction following | Use instruction-tuned variants (`-Instruct`, `-Chat`, `-it` suffixes). Base models do not follow prompts reliably. |
+| DeepSeek R1 models | R1 distil models output a `<think>...</think>` reasoning block before the answer — this will appear in the chat UI. Use a DeepSeek V2/V3 Chat model for clean output. |
+| Re-running the graph step | Switching LLM mid-project does not invalidate existing graph data. Only re-run `graph` if you want the new model to re-extract entities from scratch. |
+
+### Using a cloud provider (Gemini, OpenAI, Anthropic, Ollama)
+
+To use a cloud or alternative provider instead of LM Studio, create a `.env` file in the project root. A template is provided:
+
+```powershell
+copy .env.example .env
+```
+
+Then edit `.env` and fill in your provider and API key. The system reads this file on startup — no code changes needed.
+
+**LLM provider examples:**
+
+```env
+# Gemini
+LLM_PROVIDER=gemini
+LLM_MODEL=gemini/gemini-2.0-flash
+GEMINI_API_KEY=your-key-here
+
+# OpenAI
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+OPENAI_API_KEY=your-key-here
+
+# Anthropic (Claude)
+LLM_PROVIDER=anthropic
+LLM_MODEL=anthropic/claude-sonnet-4-5
+ANTHROPIC_API_KEY=your-key-here
+
+# Ollama (local, no API key)
+LLM_PROVIDER=ollama
+LLM_MODEL=ollama/qwen2.5:7b
+```
+
+**Embedding provider examples:**
+
+```env
+# OpenAI embeddings
+EMBED_PROVIDER=openai
+EMBED_MODEL=text-embedding-3-small
+OPENAI_API_KEY=your-key-here
+
+# Gemini embeddings
+EMBED_PROVIDER=gemini
+EMBED_MODEL=gemini/text-embedding-004
+GEMINI_API_KEY=your-key-here
+
+# Ollama embeddings (local)
+EMBED_PROVIDER=ollama
+EMBED_MODEL=ollama/nomic-embed-text
+```
+
+> **Important — embedding model consistency:** The embedding model used during the embed step must be the same model used at query time. If you change `EMBED_MODEL` after already building a corpus, the system will detect the mismatch and warn you before proceeding. You will need to re-run `python src/main.py embed` to rebuild the vector database with the new model.
+
+When a `.env` file is present, LM Studio is no longer required for the configured steps (though you can still use it for the steps not covered by the `.env`).
+
+---
+
+## 4. LM Studio Setup (Default)
+
+Skip this section if you are using a cloud provider via `.env` for both LLM and embedding steps.
 
 ### Download the models (one-time)
 
@@ -68,7 +171,7 @@ The pipeline uses two models served through LM Studio's local API. You must down
 | `nomic-embed-text-v1.5` | Text embeddings | `nomic-embed-text` |
 | `Qwen2.5-7B-Instruct` | Answer generation & entity extraction | `qwen2.5-7b-instruct` |
 
-> Choose a quantised version (Q4_K_M recommended) to fit within 4 GB VRAM.
+> Choose a quantised version — **Q4_K_M** is recommended to fit within 4 GB VRAM.
 
 ### Starting the LM Studio server
 
@@ -81,13 +184,13 @@ In LM Studio, go to the **Developer** tab (or Local Server tab) and click **Star
 | Step 1 — Ingest | None required |
 | Step 2 — Embed | `nomic-embed-text-v1.5` |
 | Step 3 — Graph | `Qwen2.5-7B-Instruct` |
-| Step 4 — Query / Chat UI | Both models (load embedding model first, then LLM) |
+| Step 4 — Query / Chat UI | Both models loaded |
 
-> LM Studio runs one model at a time by default. For the query stage, load the embedding model, then also load the LLM — they run sequentially (embedding for the query, LLM for the answer) and do not compete for VRAM simultaneously.
+> LM Studio runs one model at a time by default. For the query and chat UI stage, load the embedding model first, then also load the LLM. They run sequentially (embedding for the query, LLM for the answer) and do not compete for VRAM simultaneously.
 
 ---
 
-## 4. Running the Pipeline Step by Step
+## 5. Running the Pipeline Step by Step
 
 Run all commands from the project root with the virtual environment activated.
 
@@ -98,7 +201,10 @@ Run all commands from the project root with the virtual environment activated.
 Extracts text from all PDF and PPTX files in a folder and stores chunks in a local SQLite database. Already-indexed files are skipped automatically on re-runs (SHA-256 deduplication).
 
 ```powershell
-# Ingest an entire folder (recommended)
+# Ingest from the default folder (Ingest_Documents/)
+python src/main.py ingest
+
+# Ingest from a specific folder
 python src/main.py ingest --path C:\path\to\your\documents
 
 # Ingest a single file
@@ -118,7 +224,8 @@ Ingestion complete in 12.4s
 
 ### Step 2 — Generate embeddings
 
-**LM Studio:** Load `nomic-embed-text-v1.5` and start the server before running this step.
+**LM Studio (default):** Load `nomic-embed-text-v1.5` and start the server before running this step.
+**Cloud provider:** Ensure `EMBED_PROVIDER` and the relevant API key are set in `.env`.
 
 Converts every text chunk into a vector embedding stored in ChromaDB. These embeddings power the semantic search when you ask a question.
 
@@ -140,7 +247,8 @@ Embedding complete in 94.3s
 
 ### Step 3 — Build the knowledge graph
 
-**LM Studio:** Switch to `Qwen2.5-7B-Instruct` and ensure the server is running.
+**LM Studio (default):** Switch to `Qwen2.5-7B-Instruct` and ensure the server is running.
+**Cloud provider:** Ensure `LLM_PROVIDER` and the relevant API key are set in `.env`.
 
 Uses the LLM to extract named entities (companies, technologies, products, people) and their relationships from each chunk. Stores them in a KuzuDB graph database, linked back to source documents for citations.
 
@@ -163,9 +271,10 @@ Knowledge graph complete in 648.2s
 
 ---
 
-## 5. Starting the Chat UI
+## 6. Starting the Chat UI
 
-**LM Studio:** Both models must be loaded (`nomic-embed-text-v1.5` and `Qwen2.5-7B-Instruct`).
+**LM Studio (default):** Both models must be loaded (`nomic-embed-text-v1.5` and `Qwen2.5-7B-Instruct`).
+**Cloud provider:** Ensure your `.env` is configured with both `LLM_PROVIDER` and `EMBED_PROVIDER`.
 
 ```powershell
 streamlit run app.py
@@ -186,7 +295,7 @@ The first page load takes 20–60 seconds while Python loads the database librar
 
 | Setting | Default | Effect |
 |---------|---------|--------|
-| LLM Model | `Qwen2.5-7B-Instruct` | Change if you load a different LLM in LM Studio |
+| LLM Model | `Qwen2.5-7B-Instruct` | Change if you load a different LLM in LM Studio (ignored when using a `.env` cloud provider) |
 | Top-K retrieval results | 10 | Number of document chunks retrieved before graph expansion |
 | Context token budget | 3000 | Tokens of retrieved text sent to the LLM. Higher = richer answers, slower generation. Safe range: 500–8000 |
 
@@ -201,9 +310,10 @@ Press **Ctrl+C** in the PowerShell window where Streamlit is running.
 
 ---
 
-## 6. Querying from the Command Line
+## 7. Querying from the Command Line
 
-**LM Studio:** Both models must be loaded.
+**LM Studio (default):** Both models must be loaded.
+**Cloud provider:** Ensure your `.env` is configured.
 
 For quick one-off questions without opening the browser:
 
@@ -223,7 +333,7 @@ python src/main.py query `
 
 ---
 
-## 7. Checking Ingestion Stats
+## 8. Checking Ingestion Stats
 
 View how many documents and chunks are in the database at any time — no LM Studio required:
 
@@ -243,7 +353,7 @@ Database: data/chunks.db
 
 ---
 
-## 8. Resetting for a New Domain
+## 9. Resetting for a New Domain
 
 To index a completely different set of documents (e.g., switching from automotive to another domain), clear the existing knowledge base first:
 
@@ -265,7 +375,7 @@ Then run the full pipeline again from Step 1 with the new document folder.
 
 ---
 
-## 9. Full CLI Reference
+## 10. Full CLI Reference
 
 ### Get help
 
@@ -286,9 +396,9 @@ python src/main.py clear --help
 
 #### `ingest` — Extract and store document chunks
 ```
-python src/main.py ingest --path PATH [--db DB]
+python src/main.py ingest [--path PATH] [--db DB]
 
-  --path PATH    File or directory to ingest (required)
+  --path PATH    File or directory to ingest (default: Ingest_Documents/)
   --db DB        SQLite database path (default: data/chunks.db)
 ```
 
@@ -298,7 +408,8 @@ python src/main.py embed [--db DB] [--chroma CHROMA] [--model MODEL]
 
   --db DB          SQLite database path (default: data/chunks.db)
   --chroma CHROMA  ChromaDB path (default: data/chroma_db)
-  --model MODEL    Embedding model name in LM Studio (default: nomic-embed-text-v1.5)
+  --model MODEL    Embedding model name (default: nomic-embed-text-v1.5)
+                   Overridden by EMBED_MODEL in .env if set
 ```
 
 #### `graph` — Build the knowledge graph
@@ -307,7 +418,8 @@ python src/main.py graph [--db DB] [--graph GRAPH] [--model MODEL] [--state STAT
 
   --db DB        SQLite database path (default: data/chunks.db)
   --graph GRAPH  KuzuDB directory path (default: data/kuzu_db)
-  --model MODEL  LLM model name in LM Studio (default: Qwen2.5-7B-Instruct)
+  --model MODEL  LLM model name (default: Qwen2.5-7B-Instruct)
+                 Overridden by LLM_MODEL in .env if set
   --state STATE  Extraction checkpoint file (default: data/extraction_state.json)
 ```
 
@@ -344,11 +456,11 @@ python src/main.py clear [--db DB] [--chroma CHROMA] [--graph GRAPH] [--state ST
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### "LM Studio is not running or not reachable at localhost:1234"
 - Open LM Studio and click **Start Server** in the Developer/Local Server tab
-- Ensure the correct model is loaded for the current step (see [LM Studio Setup](#3-lm-studio-setup))
+- Ensure the correct model is loaded for the current step (see [LM Studio Setup](#4-lm-studio-setup-default))
 - Check LM Studio shows the server status as **Running**
 
 ### "No module named 'openai'" or similar import error
@@ -380,6 +492,13 @@ Get-Process python | Stop-Process -Force
 - Increase **Context token budget** in the sidebar (try 4000–5000)
 - Check `python src/main.py stats` — if "Chunks pending embedding" is non-zero, run `embed` again
 - Ensure the graph step completed fully (check entity count in the `graph` output)
+
+### "Embedding model mismatch" warning
+This appears when the `EMBED_MODEL` in your `.env` differs from the model used to build the existing corpus. You must re-run the embed step to rebuild the vector database with the new model:
+```powershell
+python src/main.py embed
+```
+Type `yes` when prompted to confirm. This overwrites the existing embeddings.
 
 ### Adding more documents to an existing knowledge base
 No need to clear. Just run ingest and embed again — new documents are added incrementally, already-indexed files are skipped:

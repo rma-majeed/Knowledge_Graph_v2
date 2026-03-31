@@ -1,9 +1,10 @@
 """Automotive Consulting GraphRAG Agent -- CLI entry point.
 
 Usage:
-    python src/main.py ingest --path <folder_or_file> [--db <db_path>]
+    python src/main.py ingest [--path <folder_or_file>] [--db <db_path>]
 
 Examples:
+    python src/main.py ingest                            # uses Ingest_Documents/ by default
     python src/main.py ingest --path documents/
     python src/main.py ingest --path report.pdf --db data/chunks.db
 """
@@ -289,7 +290,11 @@ def main() -> int:
 
     # ingest subcommand
     p_ingest = subparsers.add_parser("ingest", help="Ingest PDF/PPTX documents")
-    p_ingest.add_argument("--path", required=True, help="File or directory to ingest")
+    p_ingest.add_argument(
+        "--path",
+        default="Ingest_Documents",
+        help="File or directory to ingest (default: Ingest_Documents/)",
+    )
     p_ingest.add_argument(
         "--db", default="data/chunks.db", help="SQLite database path (default: data/chunks.db)"
     )

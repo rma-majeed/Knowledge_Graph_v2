@@ -25,13 +25,14 @@ htmlcov/
 data/chunks.db
 data/extraction_state.json
 
-# ChromaDB vector store (folder tracked via .gitkeep, data ignored)
-data/chroma_db/*
-!data/chroma_db/.gitkeep
+# ── Ingest folder (user documents — not committed) ────────────────────────────
+Ingest_Documents/
 
-# KuzuDB knowledge graph (folder tracked via .gitkeep, data ignored)
-data/kuzu_db/*
-!data/kuzu_db/.gitkeep
+# ChromaDB vector store (runtime data — not committed)
+data/chroma_db/
+
+# KuzuDB knowledge graph (runtime data — not committed)
+data/kuzu_db/
 
 # ── Claude Code internal tooling ──────────────────────────────────────────────
 .claude/

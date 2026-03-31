@@ -31,7 +31,13 @@ Citation rules:
 - Cite each source inline using [N] immediately after the relevant claim
 - Every factual statement must have at least one citation
 - If multiple sources support a claim, list all relevant citations: [1][3]
-- If the sources do not contain enough information to answer, say: "The available documents do not contain sufficient information to answer this question." — do NOT fabricate an answer
+
+Answering guidance:
+- If the sources directly answer the question, provide a clear and complete answer with citations
+- If the sources do not directly answer the question but contain related or partially relevant information, share what IS available — summarise the related content, cite it, and note that it may not fully address the question
+- Only say "The available documents do not contain sufficient information to answer this question." if the sources contain absolutely nothing relevant — no related topics, no partial matches, no adjacent information
+- Never fabricate information not present in the sources
+- Interpret questions broadly — if asked about a "capability", look for features, tools, approaches, or outcomes related to that topic across all sources
 
 Answer in professional consulting language. Be concise (3-6 sentences for most questions). Do not repeat the question."""
 
@@ -164,16 +170,30 @@ def format_answer(llm_response: str, citations: list[dict[str, Any]]) -> str:
     return llm_response + "\n\nCitations:\n" + lines
 
 
-def build_prompt(query: str, context_str: str) -> list[dict[str, str]]:
-    """Build messages list [system, user] for LM Studio chat API.
+def build_prompt(
+    query: str,
+    context_str: str,
+    conversation_history: list[dict[str, str]] | None = None,
+) -> list[dict[str, str]]:
+    """Build messages list for the LLM chat API.
+
+    If conversation_history is provided, prior Q&A turns are inserted between
+    the system prompt and the current question so the LLM understands context.
+
+    Args:
+        query: The (possibly rewritten) question for the current turn.
+        context_str: Retrieved document passages, numbered.
+        conversation_history: List of {"role": "user"|"assistant", "content": str}
+            dicts representing prior turns. Pass the last N pairs only.
 
     Returns:
-        [
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": "Question: {query}\\n\\nSources:\\n{context_str}"},
-        ]
+        List of message dicts ready for chat.completions.create(messages=...).
     """
-    return [
-        {"role": "system", "content": _SYSTEM_PROMPT},
-        {"role": "user", "content": f"Question: {query}\n\nSources:\n{context_str}"},
-    ]
+    messages: list[dict[str, str]] = [{"role": "system", "content": _SYSTEM_PROMPT}]
+
+    if conversation_history:
+        for turn in conversation_history:
+            messages.append({"role": turn["role"], "content": turn["content"]})
+
+    messages.append({"role": "user", "content": f"Question: {query}\n\nSources:\n{context_str}"})
+    return messages

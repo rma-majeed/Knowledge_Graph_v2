@@ -201,6 +201,14 @@ if prompt := st.chat_input("Ask about our automotive consulting work..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # Build conversation history from prior turns (last 3 Q&A pairs = 6 messages)
+    # Exclude the current user message just appended (last item in messages list)
+    prior_messages = st.session_state.messages[:-1]
+    conversation_history = [
+        {"role": m["role"], "content": m["content"]}
+        for m in prior_messages[-6:]
+    ] or None
+
     # Generate and display assistant response (streaming)
     with st.chat_message("assistant"):
         try:
@@ -215,6 +223,7 @@ if prompt := st.chat_input("Ask about our automotive consulting work..."):
                     n_results=top_k,
                     context_budget=context_budget,
                     openai_client=get_openai_client(),
+                    conversation_history=conversation_history,
                 )
             # Retrieval done — stream tokens live into the chat bubble
             answer_text = st.write_stream(token_stream)
