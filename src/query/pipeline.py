@@ -4,7 +4,7 @@ Wires together:
   hybrid_retrieve()    — src/query/retriever.py (vector + graph)
   truncate_to_budget() — src/query/assembler.py (token budget)
   build_prompt()       — src/query/assembler.py (system + user messages)
-  LM Studio LLM call   — openai.OpenAI(base_url="http://localhost:1234/v1")
+  _llm_complete()      — dispatch helper (OpenAI client or LiteLLM based on provider)
   format_answer()      — src/query/assembler.py (append citation table)
   build_citations()    — src/query/assembler.py (HIGH/LOW confidence)
 
@@ -25,6 +25,26 @@ import sqlite3
 
 import chromadb
 import kuzu
+
+def _llm_complete(client, model: str, messages: list, **kwargs):
+    """Dispatch LLM completion to OpenAI client or LiteLLM based on client type.
+
+    For raw OpenAI clients (LM Studio default): calls client.chat.completions.create().
+    For _LiteLLMConfig (cloud providers): calls litellm.completion() with provider routing.
+    Response shape is identical (OpenAI-compatible) for both paths.
+    """
+    if hasattr(client, "provider") and isinstance(client.provider, str):  # _LiteLLMConfig from src.config.providers
+        import litellm
+        return litellm.completion(
+            model=client.model,
+            api_key=client.api_key,
+            api_base=client.api_base,
+            messages=messages,
+            **kwargs,
+        )
+    # Raw OpenAI client (LM Studio default)
+    return client.chat.completions.create(model=model, messages=messages, **kwargs)
+
 
 DEFAULT_LLM_MODEL = "Qwen2.5-7B-Instruct"
 DEFAULT_EMBED_MODEL = "nomic-embed-text-v1.5"
@@ -65,7 +85,6 @@ def answer_question(
         - citations (list[dict]): [{index, filename, page_num, confidence, source, count}, ...]
         - elapsed_s (float): Total wall-clock seconds for retrieve + generate
     """
-    from openai import OpenAI
     from src.query.retriever import hybrid_retrieve
     from src.query.assembler import (
         truncate_to_budget,
@@ -76,7 +95,8 @@ def answer_question(
     from src.graph.citations import CitationStore
 
     if openai_client is None:
-        openai_client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+        from src.config.providers import get_llm_client
+        openai_client = get_llm_client()
 
     if chroma_client is None:
         chroma_client = chromadb.PersistentClient(path=chroma_path)
@@ -108,12 +128,8 @@ def answer_question(
     if not included_chunks:
         llm_response = "The available documents do not contain sufficient information to answer this question."
     else:
-        response = openai_client.chat.completions.create(
-            model=llm_model,
-            messages=messages,
-            temperature=_LLM_TEMPERATURE,
-            max_tokens=_LLM_MAX_TOKENS,
-        )
+        response = _llm_complete(openai_client, llm_model, messages,
+                                 temperature=_LLM_TEMPERATURE, max_tokens=_LLM_MAX_TOKENS)
         llm_response = response.choices[0].message.content.strip()
 
     # Step 4: Build citations and format final answer
@@ -150,13 +166,13 @@ def stream_answer_question(
     Retrieval and assembly happen eagerly before streaming starts.
     If no chunks are found, token_stream yields a single fallback message.
     """
-    from openai import OpenAI
     from src.query.retriever import hybrid_retrieve
     from src.query.assembler import truncate_to_budget, build_citations, build_prompt
     from src.graph.citations import CitationStore
 
     if openai_client is None:
-        openai_client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+        from src.config.providers import get_llm_client
+        openai_client = get_llm_client()
 
     if chroma_client is None:
         chroma_client = chromadb.PersistentClient(path=chroma_path)
@@ -185,13 +201,9 @@ def stream_answer_question(
 
     messages = build_prompt(question, context_str)
 
-    stream = openai_client.chat.completions.create(
-        model=llm_model,
-        messages=messages,
-        temperature=_LLM_TEMPERATURE,
-        max_tokens=_LLM_MAX_TOKENS,
-        stream=True,
-    )
+    stream = _llm_complete(openai_client, llm_model, messages,
+                           temperature=_LLM_TEMPERATURE, max_tokens=_LLM_MAX_TOKENS,
+                           stream=True)
 
     def _token_gen():
         for chunk in stream:

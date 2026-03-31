@@ -17,7 +17,6 @@ if str(_PROJECT_ROOT) not in sys.path:
 import sqlite3
 
 import streamlit as st
-from openai import OpenAI
 
 # --- Path defaults (relative to project root) ---
 
@@ -55,9 +54,10 @@ def get_kuzu_db(graph_path: str = _DEFAULT_KUZU):
 
 
 @st.cache_resource
-def get_openai_client() -> OpenAI:
-    """Create OpenAI-compatible client for LM Studio once per session."""
-    return OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+def get_openai_client():
+    """Create LLM client once per session. Provider determined by LLM_PROVIDER in .env."""
+    from src.config.providers import get_llm_client
+    return get_llm_client()
 
 
 @st.cache_data(ttl=30)
