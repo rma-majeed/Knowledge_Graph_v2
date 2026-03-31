@@ -16,12 +16,8 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 import sqlite3
 
-import kuzu
 import streamlit as st
 from openai import OpenAI
-
-from src.embed.pipeline import check_lm_studio
-from src.query.pipeline import answer_question
 
 # --- Path defaults (relative to project root) ---
 
@@ -52,8 +48,9 @@ def get_sqlite_conn(db_path: str = _DEFAULT_DB) -> sqlite3.Connection:
 
 
 @st.cache_resource
-def get_kuzu_db(graph_path: str = _DEFAULT_KUZU) -> kuzu.Database:
+def get_kuzu_db(graph_path: str = _DEFAULT_KUZU):
     """Open KuzuDB once; caching prevents 'Database already open' lock error on reruns."""
+    import kuzu  # lazy — defers 10-30s C++ extension load until first query
     return kuzu.Database(graph_path)
 
 
@@ -61,6 +58,17 @@ def get_kuzu_db(graph_path: str = _DEFAULT_KUZU) -> kuzu.Database:
 def get_openai_client() -> OpenAI:
     """Create OpenAI-compatible client for LM Studio once per session."""
     return OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+
+
+@st.cache_data(ttl=30)
+def _lm_studio_status() -> bool:
+    """Cached LM Studio health check — re-checks at most once every 30s.
+
+    Without caching, check_lm_studio() makes a synchronous HTTP call on every
+    Streamlit rerender, blocking sidebar rendering mid-way.
+    """
+    from src.embed.pipeline import check_lm_studio
+    return check_lm_studio()
 
 
 # --- Helper: user-friendly error messages ---
@@ -130,7 +138,7 @@ with st.sidebar:
     st.divider()
 
     st.subheader("System Status")
-    lm_ok = check_lm_studio()
+    lm_ok = _lm_studio_status()
     if lm_ok:
         st.success("LM Studio: connected")
     else:
@@ -143,6 +151,18 @@ with st.sidebar:
     st.subheader("Advanced Settings")
     llm_model = st.text_input("LLM Model", value=_DEFAULT_MODEL)
     top_k = st.slider("Top-K retrieval results", min_value=3, max_value=20, value=_DEFAULT_TOP_K)
+    context_budget = st.slider(
+        "Context token budget",
+        min_value=500,
+        max_value=8000,
+        value=3000,
+        step=250,
+        help=(
+            "How many tokens of retrieved text are fed to the LLM. "
+            "Higher = more context, longer generation time. "
+            "Qwen2.5-7B safe range: 500–8000 tokens."
+        ),
+    )
 
 # --- Page header ---
 
@@ -181,46 +201,43 @@ if prompt := st.chat_input("Ask about our automotive consulting work..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate and display assistant response
+    # Generate and display assistant response (streaming)
     with st.chat_message("assistant"):
-        with st.spinner("Thinking...", show_time=True):
-            try:
-                result = answer_question(
+        try:
+            with st.spinner("Retrieving relevant documents...", show_time=True):
+                from src.query.pipeline import stream_answer_question  # lazy — defers kuzu/chromadb imports
+                citations, token_stream = stream_answer_question(
                     question=prompt,
                     conn=get_sqlite_conn(_DEFAULT_DB),
                     kuzu_db=get_kuzu_db(_DEFAULT_KUZU),
                     chroma_path=_DEFAULT_CHROMA,
                     llm_model=llm_model,
                     n_results=top_k,
+                    context_budget=context_budget,
                     openai_client=get_openai_client(),
                 )
-                # Store answer prose only (not the full format_answer() text with embedded citations)
-                # Citations list stored separately so plan 05-03 can render them richly
-                answer_text = result["answer"]
-                citations = result.get("citations", [])
-                elapsed = result.get("elapsed_s", 0.0)
+            # Retrieval done — stream tokens live into the chat bubble
+            answer_text = st.write_stream(token_stream)
+            _render_citations(citations)
+            st.session_state.messages.append(
+                {
+                    "role": "assistant",
+                    "content": answer_text,
+                    "citations": citations,
+                    "elapsed_s": 0.0,
+                }
+            )
 
-                st.markdown(answer_text)
-                _render_citations(citations)
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": answer_text,
-                        "citations": citations,
-                        "elapsed_s": elapsed,
-                    }
-                )
-
-            except Exception as exc:
-                import sys as _sys
-                print(f"[ERROR] query failed: {exc}", file=_sys.stderr)
-                error_msg = _friendly_error(exc)
-                st.error(error_msg)
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": f"Error: {error_msg}",
-                        "citations": [],
-                        "elapsed_s": 0.0,
-                    }
-                )
+        except Exception as exc:
+            import sys as _sys
+            print(f"[ERROR] query failed: {exc}", file=_sys.stderr)
+            error_msg = _friendly_error(exc)
+            st.error(error_msg)
+            st.session_state.messages.append(
+                {
+                    "role": "assistant",
+                    "content": f"Error: {error_msg}",
+                    "citations": [],
+                    "elapsed_s": 0.0,
+                }
+            )

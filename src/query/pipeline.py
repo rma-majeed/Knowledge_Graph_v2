@@ -31,6 +31,7 @@ DEFAULT_EMBED_MODEL = "nomic-embed-text-v1.5"
 _COLLECTION_NAME = "chunks"
 _LLM_MAX_TOKENS = 600
 _LLM_TEMPERATURE = 0.2
+DEFAULT_CONTEXT_BUDGET = 3000
 
 
 def answer_question(
@@ -41,6 +42,7 @@ def answer_question(
     embed_model: str = DEFAULT_EMBED_MODEL,
     llm_model: str = DEFAULT_LLM_MODEL,
     n_results: int = 10,
+    context_budget: int = DEFAULT_CONTEXT_BUDGET,
     openai_client=None,
     chroma_client=None,
 ) -> dict:
@@ -97,7 +99,7 @@ def answer_question(
     )
 
     # Step 2: Assemble context within token budget
-    context_str, included_chunks = truncate_to_budget(chunks)
+    context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
 
     # Step 3: Build prompt and call LM Studio LLM
     # Fresh messages list per call — never accumulate history (stateless pipeline)
@@ -125,3 +127,76 @@ def answer_question(
         "citations": citations,
         "elapsed_s": elapsed_s,
     }
+
+
+def stream_answer_question(
+    question: str,
+    conn: sqlite3.Connection,
+    kuzu_db: kuzu.Database,
+    chroma_path: str = "data/chroma_db",
+    embed_model: str = DEFAULT_EMBED_MODEL,
+    llm_model: str = DEFAULT_LLM_MODEL,
+    n_results: int = 10,
+    context_budget: int = DEFAULT_CONTEXT_BUDGET,
+    openai_client=None,
+    chroma_client=None,
+):
+    """Run hybrid retrieval then stream LM Studio answer token-by-token.
+
+    Returns (citations, token_stream) where:
+    - citations: list[dict] — same schema as answer_question()
+    - token_stream: generator yielding str tokens from the LLM (pass to st.write_stream)
+
+    Retrieval and assembly happen eagerly before streaming starts.
+    If no chunks are found, token_stream yields a single fallback message.
+    """
+    from openai import OpenAI
+    from src.query.retriever import hybrid_retrieve
+    from src.query.assembler import truncate_to_budget, build_citations, build_prompt
+    from src.graph.citations import CitationStore
+
+    if openai_client is None:
+        openai_client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+
+    if chroma_client is None:
+        chroma_client = chromadb.PersistentClient(path=chroma_path)
+
+    citation_store = CitationStore(conn)
+
+    chunks = hybrid_retrieve(
+        query_text=question,
+        openai_client=openai_client,
+        chroma_client=chroma_client,
+        collection_name=_COLLECTION_NAME,
+        citation_store=citation_store,
+        kuzu_db=kuzu_db,
+        sqlite_conn=conn,
+        embed_model=embed_model,
+        n_results=n_results,
+    )
+
+    context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
+    citations = build_citations(included_chunks)
+
+    if not included_chunks:
+        def _fallback():
+            yield "The available documents do not contain sufficient information to answer this question."
+        return citations, _fallback()
+
+    messages = build_prompt(question, context_str)
+
+    stream = openai_client.chat.completions.create(
+        model=llm_model,
+        messages=messages,
+        temperature=_LLM_TEMPERATURE,
+        max_tokens=_LLM_MAX_TOKENS,
+        stream=True,
+    )
+
+    def _token_gen():
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+
+    return citations, _token_gen()

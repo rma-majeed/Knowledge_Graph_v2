@@ -192,6 +192,43 @@ def cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_clear(args: argparse.Namespace) -> int:
+    """Delete all indexed data so ingestion can start from scratch."""
+    import shutil
+
+    targets = [
+        (Path(args.db),     "SQLite chunk database"),
+        (Path(args.chroma), "ChromaDB vector store"),
+        (Path(args.graph),  "KuzuDB knowledge graph"),
+        (Path(args.state),  "Extraction state file"),
+    ]
+
+    existing = [(p, desc) for p, desc in targets if p.exists()]
+    if not existing:
+        print("Nothing to clear — knowledge base is already empty.")
+        return 0
+
+    print("The following will be permanently deleted:")
+    for p, desc in existing:
+        print(f"  {desc}: {p}")
+
+    if not args.force:
+        confirm = input("\nType 'yes' to confirm: ")
+        if confirm.strip().lower() != "yes":
+            print("Aborted.")
+            return 0
+
+    for p, desc in existing:
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+        print(f"  Deleted: {desc}")
+
+    print("\nKnowledge base cleared. Ready for fresh ingestion.")
+    return 0
+
+
 def cmd_query(args: argparse.Namespace) -> int:
     """Run the query pipeline and print answer + citations."""
     import kuzu
@@ -331,6 +368,27 @@ def main() -> int:
         help="Number of vector results before graph expansion (default: 10)"
     )
     p_query.set_defaults(func=cmd_query)
+
+    # clear subcommand
+    p_clear = subparsers.add_parser("clear", help="Delete all indexed data and start fresh")
+    p_clear.add_argument(
+        "--db", default="data/chunks.db", help="SQLite database path (default: data/chunks.db)"
+    )
+    p_clear.add_argument(
+        "--chroma", default="data/chroma_db", help="ChromaDB path (default: data/chroma_db)"
+    )
+    p_clear.add_argument(
+        "--graph", default="data/kuzu_db", help="KuzuDB directory path (default: data/kuzu_db)"
+    )
+    p_clear.add_argument(
+        "--state", default="data/extraction_state.json",
+        help="Extraction checkpoint file (default: data/extraction_state.json)"
+    )
+    p_clear.add_argument(
+        "--force", action="store_true",
+        help="Skip confirmation prompt (for scripted use)"
+    )
+    p_clear.set_defaults(func=cmd_clear)
 
     args = parser.parse_args()
     return args.func(args)
