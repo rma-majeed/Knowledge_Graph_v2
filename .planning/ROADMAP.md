@@ -13,7 +13,7 @@
 - [x] **Phase 2: Embedding & Vector Search** - Generate and store embeddings for semantic retrieval (completed 2026-03-30)
 - [x] **Phase 3: Knowledge Graph Construction** - Extract entities, relationships, and build knowledge graph (completed 2026-03-30)
 - [x] **Phase 4: Query Engine & Answer Generation** - Retrieve, synthesize, and cite answers to user questions (completed 2026-03-31)
-- [ ] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system
+- [x] **Phase 5: Chat UI & Session Management** - Streamlit interface for consultants to interact with the system (completed 2026-03-31)
 
 ---
 
@@ -129,12 +129,12 @@ Plans:
 4. Source citations are clickable or formatted to help consultant quickly find the referenced document
 5. System does not crash or require restart when processing queries; error messages are user-friendly and do not expose technical jargon
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 05-01-test-infrastructure-PLAN.md — app.py stub + 4 AppTest xfail stubs (Wave 1)
 - [x] 05-02-chat-app-PLAN.md — full Streamlit chat interface with session state + error handling (Wave 2)
-- [ ] 05-03-citations-and-polish-PLAN.md — citations expander, HIGH/LOW badges, polish (Wave 3)
+- [x] 05-03-citations-and-polish-PLAN.md — citations expander, HIGH/LOW badges, polish (Wave 3)
 
 **UI hint:** yes
 
@@ -148,7 +148,7 @@ Plans:
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
 | 4. Query Engine & Answer Generation | 3/4 | Complete    | 2026-03-31 |
-| 5. Chat UI & Session Management | 2/3 | In Progress|  |
+| 5. Chat UI & Session Management | 3/3 | Complete   | 2026-03-31 |
 
 ---
 
