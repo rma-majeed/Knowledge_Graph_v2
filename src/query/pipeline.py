@@ -258,6 +258,17 @@ def answer_question(
         reranker = Reranker()
         chunks = reranker.rerank(retrieval_query, chunks)
 
+    # Step 4c: Parent-document expansion (RAG-04) — expand child chunks to parent passages
+    from src.config.retrieval_config import RAG_ENABLE_PARENT_DOC
+    if RAG_ENABLE_PARENT_DOC and chunks:
+        from src.query.assembler import expand_to_parent
+        from src.ingest.store import ChunkStore
+        chunk_store = ChunkStore(conn)
+        chunk_ids = [c["chunk_id"] for c in chunks]
+        parent_texts = chunk_store.get_parent_texts(chunk_ids)
+        if parent_texts:
+            chunks = [expand_to_parent(c, parent_texts) for c in chunks]
+
     # Step 5: Assemble context within token budget
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
 
@@ -359,6 +370,17 @@ def stream_answer_question(
         from src.query.reranker import Reranker
         reranker = Reranker()
         chunks = reranker.rerank(retrieval_query, chunks)
+
+    # Step 4c: Parent-document expansion (RAG-04) — expand child chunks to parent passages
+    from src.config.retrieval_config import RAG_ENABLE_PARENT_DOC
+    if RAG_ENABLE_PARENT_DOC and chunks:
+        from src.query.assembler import expand_to_parent
+        from src.ingest.store import ChunkStore
+        chunk_store = ChunkStore(conn)
+        chunk_ids = [c["chunk_id"] for c in chunks]
+        parent_texts = chunk_store.get_parent_texts(chunk_ids)
+        if parent_texts:
+            chunks = [expand_to_parent(c, parent_texts) for c in chunks]
 
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
     citations = build_citations(included_chunks)
