@@ -91,7 +91,7 @@ def truncate_to_budget(
     counter = 0
 
     for chunk in sorted_chunks:
-        text = chunk.get("text", "")
+        text = chunk.get("enriched_text") or chunk.get("text", "")
         filename = _get_filename(chunk)
         page = _get_page_num(chunk)
         passage = f"[{counter + 1}] Source: {filename}, page {page}\n{text}"
@@ -197,3 +197,27 @@ def build_prompt(
 
     messages.append({"role": "user", "content": f"Question: {query}\n\nSources:\n{context_str}"})
     return messages
+
+
+def expand_to_parent(chunk: dict, parent_texts: dict) -> dict:
+    """Replace chunk text with parent passage text when a mapping exists.
+
+    Used by the query pipeline (RAG-04) to expand small child chunks to their
+    larger parent passage before context assembly. parent_texts is fetched by
+    the pipeline from ChunkStore.get_parent_texts().
+
+    Args:
+        chunk: A chunk dict with at minimum "chunk_id" and "text" keys.
+        parent_texts: Dict mapping str(chunk_id) -> parent_text from chunk_parents table.
+
+    Returns:
+        A copy of the chunk dict with "text" replaced by parent_text if found,
+        otherwise the original chunk dict unchanged.
+    """
+    cid = str(chunk.get("chunk_id", ""))
+    parent_text = parent_texts.get(cid)
+    if parent_text:
+        expanded = dict(chunk)
+        expanded["text"] = parent_text
+        return expanded
+    return chunk

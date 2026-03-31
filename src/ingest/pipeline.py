@@ -29,6 +29,12 @@ from src.ingest.store import ChunkStore, compute_file_hash
 _SUPPORTED_EXTENSIONS = {".pdf", ".pptx"}
 
 
+def _ingest_llm_model() -> str:
+    """Return the LLM model name for use during enrichment. Reads env or defaults."""
+    import os
+    return os.getenv("LLM_MODEL", "Qwen2.5-7B-Instruct")
+
+
 def ingest_document(
     filepath: Union[str, Path],
     db_path: Union[str, Path],
@@ -77,6 +83,8 @@ def ingest_document(
     try:
         store = ChunkStore(conn)
         store.init_schema()
+        # Phase 7: ensure Phase 7 schema additions are present
+        store.add_enriched_text_column()
 
         # Deduplication check
         if store.is_document_indexed(filepath):
@@ -129,9 +137,40 @@ def ingest_document(
                     }
                 )
 
+        # Phase 7 RAG-03: contextual chunk enrichment (optional, opt-in)
+        from src.config.retrieval_config import RAG_ENABLE_ENRICHMENT
+        if RAG_ENABLE_ENRICHMENT and all_chunks:
+            from src.ingest.enricher import enrich_chunk_context
+            from src.config.providers import get_llm_client
+            try:
+                llm_client = get_llm_client()
+                enrichment_model = _ingest_llm_model()
+                enriched = []
+                for chunk in all_chunks:
+                    enriched_text = enrich_chunk_context(chunk["text"], llm_client, enrichment_model)
+                    enriched.append({**chunk, "enriched_text": enriched_text})
+                all_chunks = enriched
+            except Exception:
+                pass  # enrichment failure must never block ingest
+
         # Bulk insert all chunks
         if all_chunks:
             store.insert_chunks(doc_id, all_chunks)
+            # Phase 7 RAG-04: parent-document mapping (optional, enabled by default)
+            from src.config.retrieval_config import RAG_ENABLE_PARENT_DOC
+            if RAG_ENABLE_PARENT_DOC:
+                # Fetch chunk_ids just inserted for this doc_id
+                inserted_rows = conn.execute(
+                    "SELECT chunk_id, chunk_text, token_count FROM chunks WHERE doc_id = ?",
+                    (doc_id,),
+                ).fetchall()
+                parent_rows = []
+                for r in inserted_rows:
+                    if hasattr(r, "keys"):
+                        parent_rows.append({"chunk_id": r["chunk_id"], "text": r["chunk_text"] or "", "token_count": r["token_count"] or 0})
+                    else:
+                        parent_rows.append({"chunk_id": r[0], "text": r[1] or "", "token_count": r[2] or 0})
+                store.insert_chunk_parents(doc_id, parent_rows)
 
         return {
             "doc_id": doc_id,
