@@ -11,7 +11,25 @@ Test isolation:
 """
 from __future__ import annotations
 
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 import pytest
+from streamlit.testing.v1 import AppTest
+
+
+_APP_PATH = str(Path(__file__).parent.parent / "app.py")
+
+# Shared mock fixtures to prevent actual network/DB calls in every test
+_MOCK_ANSWER = {"answer": "Test answer about EVs", "citations": [], "elapsed_s": 2.5}
+_MOCK_CONN = MagicMock()
+_MOCK_KUZU_DB = MagicMock()
+_MOCK_OAI = MagicMock()
+
+
+def _make_at(timeout: int = 30) -> AppTest:
+    """Create AppTest instance."""
+    return AppTest.from_file(_APP_PATH, default_timeout=timeout)
 
 
 @pytest.mark.xfail(strict=False, reason="not implemented yet")
@@ -22,7 +40,20 @@ def test_app_renders_empty_chat() -> None:
     no chat_message elements are rendered on first load (no pre-populated history);
     a chat_input widget is present and accepting input.
     """
-    raise NotImplementedError
+    with (
+        patch("src.embed.pipeline.check_lm_studio", return_value=False),
+        patch("src.query.pipeline.answer_question", return_value=_MOCK_ANSWER),
+        patch("kuzu.Database", return_value=_MOCK_KUZU_DB),
+        patch("sqlite3.connect", return_value=_MOCK_CONN),
+    ):
+        at = _make_at()
+        at.run()
+
+    assert not at.exception, f"App raised: {at.exception}"
+    # No messages pre-populated
+    assert len(at.chat_message) == 0
+    # Chat input is present
+    assert len(at.chat_input) >= 1
 
 
 @pytest.mark.xfail(strict=False, reason="not implemented yet")
@@ -36,7 +67,28 @@ def test_chat_input_triggers_response() -> None:
     answer_question mock was called exactly once with the submitted question.
     Uses patch("src.query.pipeline.answer_question", return_value=mock_result).
     """
-    raise NotImplementedError
+    mock_result = {"answer": "Test answer about EVs", "citations": [], "elapsed_s": 2.5}
+
+    with (
+        patch("src.embed.pipeline.check_lm_studio", return_value=False),
+        patch("src.query.pipeline.answer_question", return_value=mock_result),
+        patch("kuzu.Database", return_value=_MOCK_KUZU_DB),
+        patch("sqlite3.connect", return_value=_MOCK_CONN),
+    ):
+        at = _make_at()
+        at.run()
+        at.chat_input[0].set_value("What EVs did we work on?").run()
+
+    assert not at.exception, f"App raised: {at.exception}"
+
+    # Find assistant response containing the answer text
+    all_text = " ".join(
+        elem.value
+        for m in at.chat_message
+        if m.name == "assistant"
+        for elem in m.markdown
+    )
+    assert "Test answer about EVs" in all_text
 
 
 @pytest.mark.xfail(strict=False, reason="not implemented yet")
@@ -48,7 +100,32 @@ def test_chat_history_persists() -> None:
     Expected: both user questions and both assistant answers appear in the
     rendered chat_message elements after the second submission; neither is lost.
     """
-    raise NotImplementedError
+    answers = [
+        {"answer": "First answer about Toyota", "citations": [], "elapsed_s": 1.0},
+        {"answer": "Second answer about Honda", "citations": [], "elapsed_s": 1.5},
+    ]
+
+    with (
+        patch("src.embed.pipeline.check_lm_studio", return_value=False),
+        patch("src.query.pipeline.answer_question", side_effect=answers),
+        patch("kuzu.Database", return_value=_MOCK_KUZU_DB),
+        patch("sqlite3.connect", return_value=_MOCK_CONN),
+    ):
+        at = _make_at()
+        at.run()
+        at.chat_input[0].set_value("Tell me about Toyota").run()
+        at.chat_input[0].set_value("Tell me about Honda").run()
+
+    assert not at.exception, f"App raised: {at.exception}"
+
+    all_text = " ".join(
+        elem.value
+        for m in at.chat_message
+        if m.markdown
+        for elem in m.markdown
+    )
+    assert "First answer about Toyota" in all_text
+    assert "Second answer about Honda" in all_text
 
 
 @pytest.mark.xfail(strict=False, reason="not implemented yet")
@@ -61,4 +138,23 @@ def test_lm_studio_error_shows_friendly_message() -> None:
     does not contain "Traceback", "Exception", or raw Python error details;
     the app does not crash (AppTest.run() completes without raising).
     """
-    raise NotImplementedError
+    with (
+        patch(
+            "src.query.pipeline.answer_question",
+            side_effect=Exception("Connection refused"),
+        ),
+        patch("src.embed.pipeline.check_lm_studio", return_value=False),
+        patch("kuzu.Database", return_value=_MOCK_KUZU_DB),
+        patch("sqlite3.connect", return_value=_MOCK_CONN),
+    ):
+        at = _make_at()
+        at.run()
+        at.chat_input[0].set_value("Any question").run()
+
+    assert not at.exception, f"App crashed: {at.exception}"
+    # st.error was called
+    assert len(at.error) > 0
+    error_text = at.error[0].value
+    # No raw Python traceback details exposed
+    assert "Traceback" not in error_text
+    assert "Exception" not in error_text
