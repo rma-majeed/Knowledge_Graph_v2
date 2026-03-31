@@ -46,6 +46,37 @@ def _llm_complete(client, model: str, messages: list, **kwargs):
     return client.chat.completions.create(model=model, messages=messages, **kwargs)
 
 
+def _build_bm25_index(conn: sqlite3.Connection):
+    """Build in-memory BM25 index from all chunks in SQLite.
+
+    Fetches chunk_id, chunk_text, and metadata from SQLite. Returns a
+    BM25Indexer instance ready to query. Returns None if build fails or
+    rank_bm25 is not installed (graceful degradation).
+    """
+    try:
+        from src.query.bm25_index import BM25Indexer
+        rows = conn.execute(
+            "SELECT c.chunk_id, c.chunk_text, c.page_num, d.filename "
+            "FROM chunks c JOIN documents d ON c.doc_id = d.doc_id"
+        ).fetchall()
+        chunks = [
+            {
+                "chunk_id": str(r["chunk_id"] if hasattr(r, "keys") else r[0]),
+                "text": (r["chunk_text"] if hasattr(r, "keys") else r[1]) or "",
+                "page_num": (r["page_num"] if hasattr(r, "keys") else r[2]) or 0,
+                "filename": (r["filename"] if hasattr(r, "keys") else r[3]) or "",
+                "source": "bm25",
+                "distance": 1.0,
+            }
+            for r in rows
+        ]
+        indexer = BM25Indexer()
+        indexer.build(chunks)
+        return indexer
+    except Exception:
+        return None
+
+
 _EXPAND_MAX_TOKENS = 150
 _EXPAND_SYSTEM = (
     "Generate 3 alternative search queries for the given question using different terminology "
@@ -190,7 +221,10 @@ def answer_question(
     # Step 2: Expand into multiple query variants for broader retrieval coverage
     queries = _expand_queries(retrieval_query, openai_client, llm_model)
 
-    # Step 3: Multi-query vector search — run each variant, merge, deduplicate
+    # Step 3: Load feature flags
+    from src.config.retrieval_config import RAG_ENABLE_BM25
+
+    # Step 3a: Multi-query vector search — run each variant, merge, deduplicate
     all_vector_chunks: list = []
     for q in queries:
         all_vector_chunks.extend(
@@ -198,9 +232,24 @@ def answer_question(
         )
     vector_chunks = deduplicate_chunks(all_vector_chunks)
 
-    # Step 4: Graph expand on merged vector results
-    graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
-    chunks = deduplicate_chunks(vector_chunks + graph_chunks)
+    # Step 3b: BM25 keyword search + RRF fusion (RAG-01)
+    if RAG_ENABLE_BM25:
+        from src.query.rrf import rrf_fuse
+        bm25_indexer = _build_bm25_index(conn)
+        if bm25_indexer is not None:
+            bm25_chunks: list = []
+            for q in queries:
+                bm25_chunks.extend(bm25_indexer.query(q, n_results=n_results * 2))
+            bm25_chunks = deduplicate_chunks(bm25_chunks)
+            chunks_before_graph = rrf_fuse(bm25_chunks, vector_chunks)
+        else:
+            chunks_before_graph = vector_chunks  # fallback: BM25 build failed
+    else:
+        chunks_before_graph = vector_chunks
+
+    # Step 4: Graph expand on RRF-merged results
+    graph_chunks = graph_expand(chunks_before_graph, citation_store, kuzu_db, conn)
+    chunks = deduplicate_chunks(chunks_before_graph + graph_chunks)
 
     # Step 5: Assemble context within token budget
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
@@ -277,9 +326,25 @@ def stream_answer_question(
         )
     vector_chunks = deduplicate_chunks(all_vector_chunks)
 
-    # Graph expand on merged vector results
-    graph_chunks = graph_expand(vector_chunks, citation_store, kuzu_db, conn)
-    chunks = deduplicate_chunks(vector_chunks + graph_chunks)
+    # BM25 keyword search + RRF fusion (RAG-01)
+    from src.config.retrieval_config import RAG_ENABLE_BM25
+    if RAG_ENABLE_BM25:
+        from src.query.rrf import rrf_fuse
+        bm25_indexer = _build_bm25_index(conn)
+        if bm25_indexer is not None:
+            bm25_chunks: list = []
+            for q in queries:
+                bm25_chunks.extend(bm25_indexer.query(q, n_results=n_results * 2))
+            bm25_chunks = deduplicate_chunks(bm25_chunks)
+            chunks_before_graph = rrf_fuse(bm25_chunks, vector_chunks)
+        else:
+            chunks_before_graph = vector_chunks  # fallback: BM25 build failed
+    else:
+        chunks_before_graph = vector_chunks
+
+    # Graph expand on RRF-merged results
+    graph_chunks = graph_expand(chunks_before_graph, citation_store, kuzu_db, conn)
+    chunks = deduplicate_chunks(chunks_before_graph + graph_chunks)
 
     context_str, included_chunks = truncate_to_budget(chunks, token_budget=context_budget)
     citations = build_citations(included_chunks)
