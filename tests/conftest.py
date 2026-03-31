@@ -62,3 +62,60 @@ def tmp_db_conn(tmp_db_path):
     conn.row_factory = sqlite3.Row
     yield conn
     conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Provider configuration fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def mock_env_lmstudio(monkeypatch):
+    """Simulate .env with LM Studio as both LLM and embed provider (the default)."""
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("EMBED_PROVIDER", raising=False)
+    monkeypatch.delenv("EMBED_MODEL", raising=False)
+    monkeypatch.delenv("EMBED_API_KEY", raising=False)
+
+
+@pytest.fixture
+def mock_env_openai(monkeypatch):
+    """Simulate .env configured for OpenAI as both LLM and embed provider."""
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LLM_MODEL", "gpt-4o")
+    monkeypatch.setenv("LLM_API_KEY", "sk-test-openai-key")
+    monkeypatch.setenv("EMBED_PROVIDER", "openai")
+    monkeypatch.setenv("EMBED_MODEL", "text-embedding-3-small")
+    monkeypatch.setenv("EMBED_API_KEY", "sk-test-openai-key")
+
+
+@pytest.fixture
+def mock_env_ollama(monkeypatch):
+    """Simulate .env configured for Ollama (local, no API key required)."""
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("LLM_MODEL", "llama2")
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.setenv("EMBED_PROVIDER", "ollama")
+    monkeypatch.setenv("EMBED_MODEL", "nomic-embed-text")
+    monkeypatch.delenv("EMBED_API_KEY", raising=False)
+
+
+@pytest.fixture
+def mock_env_gemini(monkeypatch):
+    """Simulate .env configured for Google Gemini."""
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_MODEL", "gemini/gemini-2.5-flash")
+    monkeypatch.setenv("LLM_API_KEY", "test-gemini-api-key")
+    monkeypatch.setenv("EMBED_PROVIDER", "gemini")
+    monkeypatch.setenv("EMBED_MODEL", "gemini/text-embedding-004")
+    monkeypatch.setenv("EMBED_API_KEY", "test-gemini-api-key")
+
+
+@pytest.fixture
+def mock_env_anthropic(monkeypatch):
+    """Simulate .env configured for Anthropic (LLM only — no embedding support)."""
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("LLM_MODEL", "anthropic/claude-sonnet-4-5")
+    monkeypatch.setenv("LLM_API_KEY", "test-anthropic-api-key")
