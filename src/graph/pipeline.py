@@ -9,14 +9,14 @@ Incremental: tracks processed chunk IDs in extraction_state.json. Re-runs skip
 already-processed chunks.
 
 Usage:
-    from openai import OpenAI
+    from src.config.providers import get_llm_client
     import kuzu
     import sqlite3
 
     conn = sqlite3.connect("data/chunks.db")
     conn.row_factory = sqlite3.Row
     db = kuzu.Database("data/kuzu_db")
-    client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+    client = get_llm_client()
 
     from src.graph.pipeline import build_knowledge_graph
     result = build_knowledge_graph(
@@ -92,8 +92,8 @@ def build_knowledge_graph(
         - "alert": bool — True if graph explosion threshold exceeded
     """
     if openai_client is None:
-        from openai import OpenAI
-        openai_client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+        from src.config.providers import get_llm_client
+        openai_client = get_llm_client()
 
     state_path = Path(state_path)
     state = _load_state(state_path)
