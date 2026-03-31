@@ -106,7 +106,13 @@ Plans:
 4. Every answer includes source citations (document name, page/slide number, confidence level HIGH/LOW based on citation count)
 5. Query latency (retrieve + generate) is under 15 seconds for typical consultant questions
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 04-01-test-infrastructure-PLAN.md — src/query/ stubs, 11 xfail test stubs across 3 test files (Wave 1)
+- [ ] 04-02-hybrid-retriever-PLAN.md — vector_search() + graph_expand() + hybrid_retrieve() (Wave 2, parallel with Plan 03)
+- [ ] 04-03-assembler-and-citations-PLAN.md — truncate_to_budget() + build_citations() HIGH/LOW + format_answer() (Wave 2, parallel with Plan 02)
+- [ ] 04-04-pipeline-and-cli-PLAN.md — answer_question() pipeline wiring + query CLI subcommand (Wave 3)
 
 ### Phase 5: Chat UI & Session Management
 
@@ -136,7 +142,7 @@ Plans:
 | 1. Document Ingestion Foundation | 6/6 | Complete | 2026-03-28 |
 | 2. Embedding & Vector Search | 4/4 | Complete   | 2026-03-30 |
 | 3. Knowledge Graph Construction | 5/5 | Complete   | 2026-03-30 |
-| 4. Query Engine & Answer Generation | 0/4 | Not started | - |
+| 4. Query Engine & Answer Generation | 0/4 | Planned | - |
 | 5. Chat UI & Session Management | 0/3 | Not started | - |
 
 ---
