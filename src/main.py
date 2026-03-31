@@ -160,8 +160,8 @@ def cmd_graph(args: argparse.Namespace) -> int:
         )
         return 1
 
-    # Ensure KuzuDB directory exists
-    graph_path.mkdir(parents=True, exist_ok=True)
+    # Ensure parent directory exists (kuzu creates the db path itself)
+    graph_path.parent.mkdir(parents=True, exist_ok=True)
 
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
