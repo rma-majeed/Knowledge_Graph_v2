@@ -1,13 +1,13 @@
 """Pipeline RAG tool — wraps the full 10-step answer_question() pipeline.
 
-DB connections are module-level singletons, initialized lazily on first call.
-This avoids passing complex objects through the ADK tool calling interface.
+DB connections are shared process-wide singletons imported from db_singletons.
+KuzuDB only permits one Database instance per process — sharing prevents lock
+conflicts when both sub-agents are loaded together under adk web.
 """
 from __future__ import annotations
 
 import os
 import sys
-import sqlite3
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -16,34 +16,14 @@ from dotenv import load_dotenv
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env", override=True)
 
-# Ensure src/ is importable when running via adk web
+# Ensure src/ and GraphRAG_Factory/ are importable when running via adk web
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-# --- Lazy singletons ---
+# Shared process-wide DB singletons (avoids KuzuDB file lock between agents)
+from GraphRAG_Factory.db_singletons import _get_sqlite_conn, _get_kuzu_db
 
-_sqlite_conn: sqlite3.Connection | None = None
-_kuzu_db = None
 _openai_client = None
-
-
-def _get_sqlite_conn() -> sqlite3.Connection:
-    global _sqlite_conn
-    if _sqlite_conn is None:
-        db_path = str(_PROJECT_ROOT / "data" / "chunks.db")
-        _sqlite_conn = sqlite3.connect(db_path, check_same_thread=False)
-        _sqlite_conn.row_factory = sqlite3.Row
-        _sqlite_conn.execute("PRAGMA journal_mode=WAL")
-    return _sqlite_conn
-
-
-def _get_kuzu_db():
-    global _kuzu_db
-    if _kuzu_db is None:
-        import kuzu
-        kuzu_path = str(_PROJECT_ROOT / "data" / "kuzu_db")
-        _kuzu_db = kuzu.Database(kuzu_path)
-    return _kuzu_db
 
 
 def _get_openai_client():
@@ -90,10 +70,12 @@ def full_rag_query(question: str) -> dict:
             llm_model=llm_model,
             openai_client=_get_openai_client(),
         )
+        citations = result.get("citations", [])
         return {
             "status": "success",
             "answer": result.get("answer", ""),
-            "citations": result.get("citations", []),
+            "citations": citations,
+            "citations_block": _build_citations_block(citations),
             "elapsed_s": result.get("elapsed_s", 0.0),
         }
     except Exception as exc:
@@ -101,6 +83,35 @@ def full_rag_query(question: str) -> dict:
             "status": "error",
             "answer": "",
             "citations": [],
+            "citations_block": "(Citations unavailable.)",
             "elapsed_s": 0.0,
             "error": str(exc),
         }
+
+
+def _build_citations_block(citations: list) -> str:
+    """Format a citations list into a Citations block string."""
+    if not citations:
+        return "(No source citations available.)"
+    lines = []
+    for c in citations:
+        idx = c.get("index", len(lines) + 1)
+        filename = c.get("filename", "unknown")
+        page_num = c.get("page_num", "?")
+        lines.append(f"  [{idx}] {filename}, p.{page_num}")
+    return "Citations:\n" + "\n".join(lines)
+
+
+def append_citations(citations_block: str) -> dict:
+    """Return the citations block to append verbatim at the end of your answer.
+
+    Call this as the final step after full_rag_query. Pass the citations_block
+    value from the full_rag_query result. Append the returned text verbatim.
+
+    Args:
+        citations_block: The citations_block string from full_rag_query result.
+
+    Returns:
+        Dict with 'citations_block' to append verbatim to your answer.
+    """
+    return {"citations_block": citations_block or "(No source citations available.)"}

@@ -140,6 +140,8 @@ def embed_all_chunks(
                 return {"chunks_embedded": 0, "batches": 0}
     # --- End mismatch detection ---
 
+    from src.config.retrieval_config import RAG_ENABLE_ENRICHMENT
+
     with tqdm(total=pending_count, desc="Embedding chunks", unit="chunk") as pbar:
         while True:
             batch_rows = store.get_chunks_with_metadata_for_embedding(
@@ -148,10 +150,18 @@ def embed_all_chunks(
             if not batch_rows:
                 break
 
+            # Use enriched_text for embedding when enrichment is enabled and available
+            def _embed_text(row):
+                if RAG_ENABLE_ENRICHMENT:
+                    enriched = row["enriched_text"] if hasattr(row, "keys") else None
+                    if enriched:
+                        return enriched
+                return row["chunk_text"] if hasattr(row, "keys") else row["chunk_text"]
+
             # Build chunk dicts for embed_chunks (must have "chunk_text" key)
-            chunk_dicts = [{"chunk_text": row["chunk_text"]} for row in batch_rows]
+            chunk_dicts = [{"chunk_text": _embed_text(row)} for row in batch_rows]
             chunk_ids = [row["chunk_id"] for row in batch_rows]
-            documents = [row["chunk_text"] for row in batch_rows]
+            documents = [_embed_text(row) for row in batch_rows]
             metadatas = [
                 {
                     "doc_id": row["doc_id"],

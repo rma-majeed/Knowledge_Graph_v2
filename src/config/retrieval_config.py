@@ -27,8 +27,8 @@ RAG_ENABLE_BM25: bool = _bool_env("RAG_ENABLE_BM25", True)
 # RAG-02: BGE cross-encoder reranking (default: enabled)
 RAG_ENABLE_RERANKER: bool = _bool_env("RAG_ENABLE_RERANKER", True)
 
-# RAG-04: Parent-document retrieval — opt-in (default: disabled)
-RAG_ENABLE_PARENT_DOC: bool = _bool_env("RAG_ENABLE_PARENT_DOC", False)
+# RAG-04: Parent-document retrieval — 3-chunk sliding window (default: enabled)
+RAG_ENABLE_PARENT_DOC: bool = _bool_env("RAG_ENABLE_PARENT_DOC", True)
 
-# RAG-03: Contextual chunk enrichment — opt-in (default: disabled)
-RAG_ENABLE_ENRICHMENT: bool = _bool_env("RAG_ENABLE_ENRICHMENT", False)
+# RAG-03: Contextual chunk enrichment — LLM summary prepended at ingest time (default: enabled)
+RAG_ENABLE_ENRICHMENT: bool = _bool_env("RAG_ENABLE_ENRICHMENT", True)

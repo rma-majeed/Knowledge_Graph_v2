@@ -6,7 +6,9 @@ Four standalone tools the agent can call independently or in combination:
   - graph_search   : KuzuDB entity graph traversal
   - rerank         : BGE cross-encoder re-scoring of chunk_ids from prior searches
 
-Each tool uses lazy singleton DB connections (same pattern as pipeline_tools.py).
+DB connections (KuzuDB, SQLite, ChromaDB) are shared process-wide singletons
+imported from db_singletons — this prevents KuzuDB file lock conflicts when
+both sub-agents are loaded in the same process under adk web.
 """
 from __future__ import annotations
 
@@ -21,45 +23,16 @@ if str(_PROJECT_ROOT) not in sys.path:
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env", override=True)
 
-_CHROMA_PATH = str(_PROJECT_ROOT / "data" / "chroma_db")
-_SQLITE_PATH = str(_PROJECT_ROOT / "data" / "chunks.db")
-_KUZU_PATH   = str(_PROJECT_ROOT / "data" / "kuzu_db")
-_EMBED_MODEL  = os.getenv("EMBED_MODEL", "text-embedding-nomic-embed-text-v1.5")
-_COLLECTION   = "chunks"
+_EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-nomic-embed-text-v1.5")
+_COLLECTION  = "chunks"
 
 # Node types defined in src/graph/db_manager.py
 _NODE_TYPES = ["OEM", "Supplier", "Technology", "Product", "Recommendation"]
 
-# Lazy singletons — created on first tool call, reused after
-_sqlite_conn   = None
-_kuzu_db       = None
-_chroma_client = None
-_embed_client  = None
+# Shared process-wide DB singletons (avoids KuzuDB file lock between agents)
+from GraphRAG_Factory.db_singletons import _get_sqlite_conn, _get_kuzu_db, _get_chroma_client
 
-
-def _get_sqlite_conn():
-    global _sqlite_conn
-    if _sqlite_conn is None:
-        import sqlite3
-        _sqlite_conn = sqlite3.connect(_SQLITE_PATH, check_same_thread=False)
-        _sqlite_conn.row_factory = sqlite3.Row
-    return _sqlite_conn
-
-
-def _get_kuzu_db():
-    global _kuzu_db
-    if _kuzu_db is None:
-        import kuzu
-        _kuzu_db = kuzu.Database(_KUZU_PATH)
-    return _kuzu_db
-
-
-def _get_chroma_client():
-    global _chroma_client
-    if _chroma_client is None:
-        import chromadb
-        _chroma_client = chromadb.PersistentClient(path=_CHROMA_PATH)
-    return _chroma_client
+_embed_client = None
 
 
 def _get_embed_client():

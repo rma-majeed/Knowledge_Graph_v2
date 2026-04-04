@@ -173,17 +173,18 @@ class ChunkStore:
                 - chunk_index (int): 0-indexed position within document
                 - text (str): Raw chunk text
                 - token_count (int): Token count from tiktoken
+                - enriched_text (str, optional): LLM-enriched version of the chunk text
 
         Returns:
             None. Commits after bulk insert.
         """
         rows = [
-            (doc_id, c["page_num"], c["chunk_index"], c["text"], c["token_count"], 0)
+            (doc_id, c["page_num"], c["chunk_index"], c["text"], c.get("enriched_text"), c["token_count"], 0)
             for c in chunks
         ]
         self.conn.executemany(
-            """INSERT INTO chunks (doc_id, page_num, chunk_index, chunk_text, token_count, embedding_flag)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO chunks (doc_id, page_num, chunk_index, chunk_text, enriched_text, token_count, embedding_flag)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
             rows,
         )
         self.conn.commit()
@@ -247,33 +248,49 @@ class ChunkStore:
     # ------------------------------------------------------------------
 
     def insert_chunk_parents(self, doc_id: int, chunk_rows: list[dict]) -> None:
-        """Insert identity-mapping rows into chunk_parents for a newly ingested document.
+        """Insert 3-chunk sliding window parent passages into chunk_parents.
 
-        v1: each chunk is its own parent (child_chunk_id == parent_chunk_id).
-        chunk_rows must have keys: chunk_id (int), text (str), token_count (int).
+        For each chunk N, the parent passage is the concatenation of chunks
+        N-1, N, and N+1 (where they exist), providing ~1500 tokens of context
+        around each retrieved chunk at query time.
+
+        chunk_rows must have keys: chunk_id (int), text (str), token_count (int),
+        chunk_index (int, for ordering).
 
         Args:
-            doc_id: Unused in v1 but kept for future parent-building logic.
+            doc_id: Unused but kept for API consistency.
             chunk_rows: List of dicts from insert_chunks() augmented with chunk_id.
         """
-        rows = [
-            (
-                int(r["chunk_id"]),
-                int(r["chunk_id"]),
-                r.get("text", ""),
-                r.get("token_count", 0),
-            )
-            for r in chunk_rows
-            if r.get("chunk_id") is not None
-        ]
-        if rows:
-            self.conn.executemany(
-                "INSERT OR IGNORE INTO chunk_parents "
-                "(child_chunk_id, parent_chunk_id, parent_text, parent_token_count) "
-                "VALUES (?, ?, ?, ?)",
-                rows,
-            )
-            self.conn.commit()
+        valid_rows = [r for r in chunk_rows if r.get("chunk_id") is not None]
+        if not valid_rows:
+            return
+
+        # Sort by chunk_index to ensure correct document order
+        sorted_rows = sorted(valid_rows, key=lambda r: r.get("chunk_index", 0))
+        n = len(sorted_rows)
+
+        rows = []
+        for i, row in enumerate(sorted_rows):
+            # Window: chunk[i-1] + chunk[i] + chunk[i+1]
+            start = max(0, i - 1)
+            end = min(n - 1, i + 1)
+            window = sorted_rows[start : end + 1]
+            parent_text = " ".join(r.get("text", "") for r in window)
+            parent_token_count = sum(r.get("token_count", 0) for r in window)
+            rows.append((
+                int(row["chunk_id"]),
+                int(row["chunk_id"]),  # parent_chunk_id = central chunk (for FK integrity)
+                parent_text,
+                parent_token_count,
+            ))
+
+        self.conn.executemany(
+            "INSERT OR IGNORE INTO chunk_parents "
+            "(child_chunk_id, parent_chunk_id, parent_text, parent_token_count) "
+            "VALUES (?, ?, ?, ?)",
+            rows,
+        )
+        self.conn.commit()
 
     def get_parent_texts(self, chunk_ids: list) -> dict:
         """Fetch parent_text for each child_chunk_id from chunk_parents.
@@ -326,6 +343,7 @@ class ChunkStore:
             SELECT
                 c.chunk_id,
                 c.chunk_text,
+                c.enriched_text,
                 c.doc_id,
                 d.filename,
                 c.page_num,

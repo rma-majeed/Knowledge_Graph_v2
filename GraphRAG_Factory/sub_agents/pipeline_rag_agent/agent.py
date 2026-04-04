@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
-from .tools.pipeline_tools import full_rag_query
+from .tools.pipeline_tools import full_rag_query, append_citations
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env", override=True)
@@ -33,15 +33,22 @@ def create_pipeline_rag_agent() -> LlmAgent:
         ),
         instruction=(
             "You are the Pipeline RAG agent for an automotive consulting knowledge base.\n\n"
-            "When given a question:\n"
-            "1. Call full_rag_query with the exact question provided.\n"
-            "2. If status is 'success', return the answer and citations as-is.\n"
-            "3. If status is 'error', return: 'Retrieval failed: <error message>'\n\n"
-            "Do NOT rephrase or modify the answer — return it exactly as the tool provides.\n"
-            "Always include the citations list in your response."
+            "STEP 1: Call full_rag_query with the exact question provided.\n"
+            "  - If status is 'error', respond: 'Retrieval failed: <error message>' and stop.\n\n"
+            "STEP 2: Write your answer using the 'answer' field from the tool result.\n"
+            "  Copy the answer text. Use inline [N] citation markers where they appear.\n\n"
+            "STEP 3 — MANDATORY: Call append_citations, passing the 'citations_block' value\n"
+            "  from the full_rag_query result. Then append the returned citations_block\n"
+            "  verbatim at the end of your response on a new line.\n\n"
+            "CITATIONS ARE MANDATORY. Every response must end with the Citations block.\n"
+            "Example format:\n"
+            "  <answer text with [1][2] inline markers>\n\n"
+            "  Citations:\n"
+            "    [1] document.pdf, p.3\n"
+            "    [2] report.pptx, p.7"
         ),
         output_key="pipeline_rag_result",
-        tools=[full_rag_query],
+        tools=[full_rag_query, append_citations],
     )
     return agent
 

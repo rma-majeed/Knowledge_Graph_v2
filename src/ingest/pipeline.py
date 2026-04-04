@@ -161,15 +161,15 @@ def ingest_document(
             if RAG_ENABLE_PARENT_DOC:
                 # Fetch chunk_ids just inserted for this doc_id
                 inserted_rows = conn.execute(
-                    "SELECT chunk_id, chunk_text, token_count FROM chunks WHERE doc_id = ?",
+                    "SELECT chunk_id, chunk_text, token_count, chunk_index FROM chunks WHERE doc_id = ?",
                     (doc_id,),
                 ).fetchall()
                 parent_rows = []
                 for r in inserted_rows:
                     if hasattr(r, "keys"):
-                        parent_rows.append({"chunk_id": r["chunk_id"], "text": r["chunk_text"] or "", "token_count": r["token_count"] or 0})
+                        parent_rows.append({"chunk_id": r["chunk_id"], "text": r["chunk_text"] or "", "token_count": r["token_count"] or 0, "chunk_index": r["chunk_index"] or 0})
                     else:
-                        parent_rows.append({"chunk_id": r[0], "text": r[1] or "", "token_count": r[2] or 0})
+                        parent_rows.append({"chunk_id": r[0], "text": r[1] or "", "token_count": r[2] or 0, "chunk_index": r[3] or 0})
                 store.insert_chunk_parents(doc_id, parent_rows)
 
         return {
