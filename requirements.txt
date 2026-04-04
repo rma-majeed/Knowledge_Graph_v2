@@ -1,16 +1,16 @@
 # Document extraction
-PyMuPDF>=1.23.0
-python-pptx>=0.6.0
+PyMuPDF>=1.27.0
+python-pptx>=1.0.0
 
 # Chunking / token counting
-tiktoken>=0.5.0
+tiktoken>=0.12.0
 
 # Progress display
-tqdm>=4.66.0
+tqdm>=4.67.0
 
 # Testing
-pytest>=7.4.0
-pytest-cov>=4.0.0
+pytest>=9.0.0
+pytest-cov>=7.0.0
 
 # Vector store
 chromadb>=1.5.5
@@ -19,21 +19,27 @@ chromadb>=1.5.5
 kuzu>=0.11.3
 rapidfuzz>=3.14.0
 
-# LM Studio API client
-openai>=1.0.0
+# LM Studio / OpenAI-compatible API client
+openai>=2.0.0
 
 # Multi-provider LLM and embedding adapter
-litellm>=1.45.0
-python-dotenv>=1.0.0
+litellm>=1.83.0
+python-dotenv>=1.2.0
 
-# Chat UI (archived — replaced by adk web)
-streamlit>=1.30.0
+# HTTP client (used directly in src/embed/pipeline.py for LM Studio health check)
+httpx>=0.28.0
+
+# Streamlit web UI (app.py)
+streamlit>=1.55.0
 
 # Google ADK multi-agent framework
-google-adk>=1.0.0
+google-adk>=1.28.0
 
 # BM25 keyword index for hybrid retrieval (RAG-01)
 rank_bm25>=0.2.2
 
-# Cross-encoder reranker (RAG-02)
-sentence-transformers>=2.7.0
+# Cross-encoder reranker (RAG-02) — pulls in torch + transformers as transitive deps
+sentence-transformers>=5.0.0
+
+# HuggingFace Hub — used by download_reranker.py / download_reranker_clean.py
+huggingface_hub>=1.8.0
