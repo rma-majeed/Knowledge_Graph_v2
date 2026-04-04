@@ -1,9 +1,10 @@
 """Individual search tools for search_rag_agent (Phase 2).
 
-Three standalone tools the agent can call independently or in combination:
+Four standalone tools the agent can call independently or in combination:
   - vector_search  : ChromaDB semantic similarity search
   - bm25_search    : SQLite BM25 keyword search
   - graph_search   : KuzuDB entity graph traversal
+  - rerank         : BGE cross-encoder re-scoring of chunk_ids from prior searches
 
 Each tool uses lazy singleton DB connections (same pattern as pipeline_tools.py).
 """
@@ -263,3 +264,133 @@ def graph_search(entity: str, hops: int = 1) -> dict:
             "relationships": [],
             "error": str(exc),
         }
+
+
+# ---------------------------------------------------------------------------
+# Tool 4: Rerank
+# ---------------------------------------------------------------------------
+
+def rerank(query: str, chunk_ids: list[str]) -> dict:
+    """Re-score a list of chunk_ids using the BGE cross-encoder reranker.
+
+    Call this after vector_search or bm25_search to improve result ordering.
+    The reranker scores each (query, chunk_text) pair together — it catches
+    relevance that embedding similarity misses.
+
+    Requires RAG_ENABLE_RERANKER=true in .env and the BGE model downloaded.
+    If the reranker is unavailable, returns chunks in original order.
+
+    Args:
+        query: The original search query string.
+        chunk_ids: List of chunk_id strings from a prior vector_search or bm25_search.
+
+    Returns:
+        Dict with status and reranked list of chunks with rerank_score added.
+    """
+    if not chunk_ids:
+        return {"status": "success", "query": query, "count": 0, "results": []}
+
+    try:
+        # Fetch chunk texts from SQLite for the given chunk_ids
+        conn = _get_sqlite_conn()
+        placeholders = ",".join("?" * len(chunk_ids))
+        rows = conn.execute(
+            f"SELECT c.chunk_id, c.chunk_text, c.page_num, d.filename "
+            f"FROM chunks c JOIN documents d ON c.doc_id = d.doc_id "
+            f"WHERE c.chunk_id IN ({placeholders})",
+            chunk_ids,
+        ).fetchall()
+
+        if not rows:
+            return {"status": "success", "query": query, "count": 0, "results": [],
+                    "message": "None of the provided chunk_ids were found in the database."}
+
+        chunks = [
+            {
+                "chunk_id": str(r["chunk_id"]),
+                "text": r["chunk_text"] or "",
+                "page_num": r["page_num"] or 0,
+                "filename": r["filename"] or "",
+            }
+            for r in rows
+        ]
+
+        # Apply BGE reranker if enabled
+        from src.config.retrieval_config import RAG_ENABLE_RERANKER
+        if RAG_ENABLE_RERANKER:
+            from src.query.reranker import get_reranker
+            reranked = get_reranker().rerank(query, chunks)
+        else:
+            reranked = chunks
+
+        return {
+            "status": "success",
+            "query": query,
+            "reranker_active": bool(RAG_ENABLE_RERANKER),
+            "count": len(reranked),
+            "results": [
+                {
+                    "chunk_id": c["chunk_id"],
+                    "text": c["text"][:600],
+                    "filename": c["filename"],
+                    "page_num": c["page_num"],
+                    "rerank_score": round(float(c.get("_rerank_score", 0.0)), 4),
+                }
+                for c in reranked
+            ],
+        }
+    except Exception as exc:
+        return {"status": "error", "query": query, "count": 0, "results": [], "error": str(exc)}
+
+
+# ---------------------------------------------------------------------------
+# Tool 5: Format citations
+# ---------------------------------------------------------------------------
+
+def format_citations(chunk_ids: list[str]) -> dict:
+    """Build a formatted Citations block from a list of chunk_ids.
+
+    ALWAYS call this as the last step before finishing your answer.
+    Pass all chunk_ids collected from prior search tool results.
+    Append the returned citations_block verbatim at the end of your answer.
+
+    Args:
+        chunk_ids: List of chunk_id strings used as evidence in the answer.
+
+    Returns:
+        Dict with 'citations_block' string — append it verbatim to your answer.
+    """
+    if not chunk_ids:
+        return {"status": "success", "citations_block": "(No source citations available.)"}
+
+    try:
+        conn = _get_sqlite_conn()
+        placeholders = ",".join("?" * len(chunk_ids))
+        rows = conn.execute(
+            f"SELECT c.chunk_id, c.page_num, d.filename "
+            f"FROM chunks c JOIN documents d ON c.doc_id = d.doc_id "
+            f"WHERE c.chunk_id IN ({placeholders})",
+            chunk_ids,
+        ).fetchall()
+
+        # Deduplicate by (filename, page_num), preserve order of chunk_ids
+        seen: set[tuple] = set()
+        lines: list[str] = []
+        index = 1
+        for chunk_id in chunk_ids:
+            row = next((r for r in rows if str(r["chunk_id"]) == str(chunk_id)), None)
+            if row is None:
+                continue
+            key = (row["filename"], row["page_num"])
+            if key not in seen:
+                seen.add(key)
+                lines.append(f"  [{index}] {row['filename']}, p.{row['page_num']}")
+                index += 1
+
+        if not lines:
+            return {"status": "success", "citations_block": "(No source citations available.)"}
+
+        return {"status": "success", "citations_block": "Citations:\n" + "\n".join(lines)}
+
+    except Exception as exc:
+        return {"status": "error", "citations_block": "(Citations unavailable.)", "error": str(exc)}
