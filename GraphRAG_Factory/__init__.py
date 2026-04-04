@@ -1,0 +1,1 @@
+from .agent import create_graphrag_factory_agent

@@ -19,6 +19,15 @@ logger = logging.getLogger(__name__)
 
 _BGE_MODEL_ID = "BAAI/bge-reranker-v2-m3"
 _DEFAULT_BATCH_SIZE = 16
+_singleton: "Reranker | None" = None
+
+
+def get_reranker() -> "Reranker":
+    """Return the module-level Reranker singleton (created on first call)."""
+    global _singleton
+    if _singleton is None:
+        _singleton = Reranker()
+    return _singleton
 
 
 class Reranker:

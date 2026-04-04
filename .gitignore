@@ -33,6 +33,10 @@ data/chroma_db/
 
 # KuzuDB knowledge graph (runtime data — not committed)
 data/kuzu_db/
+data/kuzu_db
+
+# ── Google ADK runtime state ──────────────────────────────────────────────────
+**/.adk/
 
 # ── Claude Code internal tooling ──────────────────────────────────────────────
 .claude/

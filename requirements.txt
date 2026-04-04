@@ -26,8 +26,11 @@ openai>=1.0.0
 litellm>=1.45.0
 python-dotenv>=1.0.0
 
-# Chat UI
+# Chat UI (archived — replaced by adk web)
 streamlit>=1.30.0
+
+# Google ADK multi-agent framework
+google-adk>=1.0.0
 
 # BM25 keyword index for hybrid retrieval (RAG-01)
 rank_bm25>=0.2.2

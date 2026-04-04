@@ -1,0 +1,198 @@
+<style>
+.step-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:12px}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--border-radius-md);white-space:nowrap}
+.badge-purple{background:#EEEDFE;color:#3C3489}
+.badge-teal{background:#E1F5EE;color:#085041}
+.badge-amber{background:#FAEEDA;color:#633806}
+.badge-red{background:#FCEBEB;color:#791F1F}
+.badge-green{background:#EAF3DE;color:#27500A}
+.badge-gray{background:#F1EFE8;color:#444441}
+.step-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.step-body{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.step-detail{font-size:12px;color:var(--color-text-tertiary);margin-top:6px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2px solid var(--color-border-secondary)}
+.connector{display:flex;align-items:center;justify-content:center;margin:2px 0;font-size:18px;color:var(--color-text-tertiary)}
+.connector-label{font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-top:-4px;margin-bottom:4px}
+.loop-box{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:12px;margin:8px 0;background:var(--color-background-secondary)}
+.loop-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
+.decision-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin:4px 0}
+.decision-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--color-text-secondary);margin:4px 0}
+.dot-green{width:8px;height:8px;border-radius:50%;background:#639922;flex-shrink:0;margin-top:4px}
+.dot-red{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;margin-top:4px}
+.query-box{background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);padding:10px 14px;font-size:13px;color:#3C3489;margin:8px 0;font-style:italic}
+.rewrite-box{background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:var(--border-radius-md);padding:10px 14px;font-size:13px;color:#633806;margin:8px 0;font-style:italic}
+.retry-arrow{display:flex;align-items:center;gap:6px;font-size:12px;color:#E24B4A;padding:6px 10px;background:#FCEBEB;border-radius:var(--border-radius-md);border:0.5px solid #F09595;margin:4px 0}
+.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.num-purple{background:#EEEDFE;color:#3C3489}
+.num-teal{background:#E1F5EE;color:#085041}
+.num-amber{background:#FAEEDA;color:#633806}
+.num-red{background:#FCEBEB;color:#791F1F}
+.num-green{background:#EAF3DE;color:#27500A}
+</style>
+
+<div style="padding:0.5rem 0">
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-purple">1</div>
+    <span class="badge badge-purple">User</span>
+    <span class="step-title">Consultant types a query</span>
+  </div>
+  <div class="query-box">"How has our recommendation on EV battery suppliers evolved across Toyota engagements from 2019 to 2023?"</div>
+  <div class="step-detail">This is a multi-hop query — it spans multiple documents, multiple years, and asks for a trend, not a single fact. Standard RAG would likely fail this.</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-purple">2</div>
+    <span class="badge badge-purple">Master Agent</span>
+    <span class="step-title">Query classification and planning</span>
+  </div>
+  <div class="step-body">The master agent (Google ADK) reads the query and makes three decisions before any retrieval happens.</div>
+  <div class="decision-card" style="margin-top:8px">
+    <div class="decision-row"><div class="dot-green"></div><span>Query type → multi-hop (spans years + entities)</span></div>
+    <div class="decision-row"><div class="dot-green"></div><span>Strategy → needs graph traversal + temporal filtering</span></div>
+    <div class="decision-row"><div class="dot-green"></div><span>Agents needed → Retrieval Agent + Reasoning Agent</span></div>
+  </div>
+  <div class="step-detail">This planning step is what separates agentic RAG from a pipeline. A pipeline always runs the same steps. The agent decides the right steps for this specific query.</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-purple">3</div>
+    <span class="badge badge-purple">Query Rewriter Agent</span>
+    <span class="step-title">Expand into sub-queries</span>
+  </div>
+  <div class="step-body">The single query is decomposed into targeted sub-queries to maximise coverage across retrieval methods.</div>
+  <div style="margin-top:8px">
+    <div class="rewrite-box">Sub-query 1: "Toyota EV battery supplier recommendation 2019"</div>
+    <div class="rewrite-box">Sub-query 2: "Toyota battery supply chain LG CATL Panasonic"</div>
+    <div class="rewrite-box">Sub-query 3: "EV battery sourcing strategy automotive consulting"</div>
+  </div>
+  <div class="step-detail">Each sub-query hits different parts of the retrieval pipeline — some catch keyword matches (BM25), others catch conceptual matches (vector).</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-teal">4</div>
+    <span class="badge badge-teal">Retrieval Agent</span>
+    <span class="step-title">Parallel retrieval across all methods</span>
+  </div>
+  <div class="step-body">All three sub-queries fire simultaneously across three retrieval channels.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+    <div class="decision-card" style="font-size:12px">
+      <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">BM25</div>
+      <div style="color:var(--color-text-secondary)">Catches "Toyota", "LG Energy", exact year mentions</div>
+    </div>
+    <div class="decision-card" style="font-size:12px">
+      <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Vector</div>
+      <div style="color:var(--color-text-secondary)">Catches semantic concepts — "battery sourcing", "cell supplier"</div>
+    </div>
+    <div class="decision-card" style="font-size:12px">
+      <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Graph</div>
+      <div style="color:var(--color-text-secondary)">Traverses Toyota → Supplier edges in KuzuDB across all docs</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;font-size:12px;color:var(--color-text-secondary)">→ RRF fusion merges all ranked lists → 30 candidate chunks</div>
+  <div style="font-size:12px;color:var(--color-text-secondary)">→ BGE cross-encoder reranks to top 20 by true relevance</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="loop-box">
+  <div class="loop-title">The agentic loop — this is what makes it different</div>
+
+  <div class="step-card" style="margin-bottom:8px">
+    <div class="step-header">
+      <div class="step-num num-amber">5</div>
+      <span class="badge badge-amber">Quality Evaluator</span>
+      <span class="step-title">Score the retrieved context</span>
+    </div>
+    <div class="step-body">The evaluator scores the 20 chunks against the original query on three dimensions.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+      <div class="decision-card" style="font-size:12px;text-align:center">
+        <div style="font-weight:500;font-size:16px;color:var(--color-text-primary)">Coverage</div>
+        <div style="color:var(--color-text-secondary)">Are all years present?</div>
+      </div>
+      <div class="decision-card" style="font-size:12px;text-align:center">
+        <div style="font-weight:500;font-size:16px;color:var(--color-text-primary)">Relevance</div>
+        <div style="color:var(--color-text-secondary)">Are chunks on-topic?</div>
+      </div>
+      <div class="decision-card" style="font-size:12px;text-align:center">
+        <div style="font-weight:500;font-size:16px;color:var(--color-text-primary)">Completeness</div>
+        <div style="color:var(--color-text-secondary)">Enough to synthesise?</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+    <div>
+      <div style="font-size:12px;font-weight:500;color:#791F1F;margin-bottom:6px">Path A — score too low → retry</div>
+      <div class="retry-arrow">↩ Loop back to Query Rewriter Agent</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;padding:0 4px">The evaluator sends specific feedback:</div>
+      <div class="step-detail" style="margin-top:4px">"Found 2019 and 2023 chunks but missing 2020–2022. Reformulate to target mid-period engagements."</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:6px;padding:0 4px">Query Rewriter generates new sub-queries:</div>
+      <div class="rewrite-box" style="margin:4px 0">"Toyota battery supplier review 2020 2021"</div>
+      <div class="rewrite-box" style="margin:4px 0">"EV supply chain gap analysis mid period"</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px;padding:0 4px">Retrieval runs again. Max 2–3 retries before fallback.</div>
+    </div>
+
+    <div>
+      <div style="font-size:12px;font-weight:500;color:#27500A;margin-bottom:6px">Path B — score sufficient → proceed</div>
+      <div style="background:#EAF3DE;border:0.5px solid #97C459;border-radius:var(--border-radius-md);padding:8px 10px;font-size:12px;color:#27500A">Quality threshold met — 18 relevant chunks covering 2019–2023</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:8px;padding:0 4px">Context assembled within token budget, enriched text applied where available, then passed to generation.</div>
+    </div>
+  </div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-teal">6</div>
+    <span class="badge badge-teal">Reasoning Agent</span>
+    <span class="step-title">Multi-document synthesis</span>
+  </div>
+  <div class="step-body">The reasoning agent receives the assembled context and does what a plain pipeline cannot — it explicitly connects findings across documents before writing the answer.</div>
+  <div class="step-detail">Internal reasoning: "2019 chunks recommend CATL as primary. 2021 chunks introduce LG Energy as alternative. 2023 chunks show diversification recommendation away from single supplier. Pattern = supply chain de-risking trend."</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-purple">7</div>
+    <span class="badge badge-purple">LLM Generation</span>
+    <span class="step-title">Answer with citations</span>
+  </div>
+  <div class="step-body">The LLM (Gemini / cloud model) receives the reasoning agent's synthesised context and generates the final answer with inline citations — not just raw chunks.</div>
+  <div class="step-detail">Output: structured answer tracing the evolution from single-supplier to diversified sourcing, with [Source: Toyota_EV_Strategy_2019.pdf, p4] [Source: Battery_Supply_Review_2023.pptx, slide 12] citations.</div>
+</div>
+
+<div class="connector">↓</div>
+
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num num-green">8</div>
+    <span class="badge badge-green">Session Memory</span>
+    <span class="step-title">Store for follow-up queries</span>
+  </div>
+  <div class="step-body">ADK session management persists the full conversation — query, retrieved chunks, and answer — so follow-up queries can reference this context directly.</div>
+  <div class="step-detail">Next query: "Which of those suppliers did we recommend for Honda?" — the agent knows "those suppliers" refers to CATL and LG Energy from the previous turn, without re-retrieval.</div>
+</div>
+
+</div>
+<script>
+document.querySelectorAll('.step-card').forEach(c=>{
+  c.style.cursor='default';
+  c.addEventListener('mouseenter',()=>c.style.borderColor='var(--color-border-secondary)');
+  c.addEventListener('mouseleave',()=>c.style.borderColor='var(--color-border-tertiary)');
+});
+</script>

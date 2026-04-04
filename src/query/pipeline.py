@@ -254,9 +254,8 @@ def answer_question(
     # Step 4b: Cross-encoder reranking (RAG-02) — after graph expand, before budget truncation
     from src.config.retrieval_config import RAG_ENABLE_RERANKER
     if RAG_ENABLE_RERANKER and chunks:
-        from src.query.reranker import Reranker
-        reranker = Reranker()
-        chunks = reranker.rerank(retrieval_query, chunks)
+        from src.query.reranker import get_reranker
+        chunks = get_reranker().rerank(retrieval_query, chunks)
 
     # Step 4c: Parent-document expansion (RAG-04) — expand child chunks to parent passages
     from src.config.retrieval_config import RAG_ENABLE_PARENT_DOC
@@ -367,9 +366,8 @@ def stream_answer_question(
     # Step 4b: Cross-encoder reranking (RAG-02) — after graph expand, before budget truncation
     from src.config.retrieval_config import RAG_ENABLE_RERANKER
     if RAG_ENABLE_RERANKER and chunks:
-        from src.query.reranker import Reranker
-        reranker = Reranker()
-        chunks = reranker.rerank(retrieval_query, chunks)
+        from src.query.reranker import get_reranker
+        chunks = get_reranker().rerank(retrieval_query, chunks)
 
     # Step 4c: Parent-document expansion (RAG-04) — expand child chunks to parent passages
     from src.config.retrieval_config import RAG_ENABLE_PARENT_DOC
